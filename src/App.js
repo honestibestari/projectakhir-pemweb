@@ -386,7 +386,7 @@ function AuthModal({ close, setUser, mode }) {
         </button>
 
         <h2 style={{textAlign:"center",color:"#e91e8c"}}>
-          {isLogin ? "Masuk" : "Daftar"}
+          {isLogin ? "Login" : "Register"}
         </h2>
 
         <form onSubmit={handleSubmit}>
@@ -420,7 +420,7 @@ function AuthModal({ close, setUser, mode }) {
           />
 
           <button className="btn-cart" type="submit">
-            {isLogin ? "Masuk" : "Daftar"}
+            {isLogin ? "Login" : "Register"}
           </button>
         </form>
 
@@ -430,7 +430,7 @@ function AuthModal({ close, setUser, mode }) {
             style={{color:"#e91e8c",cursor:"pointer"}}
             onClick={()=>setIsLogin(!isLogin)}
           >
-            {isLogin ? "Daftar" : "Masuk"}
+            {isLogin ? "Register" : "Login"}
           </span>
         </p>
 
