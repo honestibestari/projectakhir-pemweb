@@ -92,7 +92,7 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-function TopNavbar({ user, cartCount, openCart }) {
+function TopNavbar({ user, cartCount, openCart, openAuth }) {
   return (
     <div style={{
       display:"flex",
@@ -108,7 +108,7 @@ function TopNavbar({ user, cartCount, openCart }) {
       </div>
 
       <input
-        placeholder="Cari produk..."
+        placeholder="Search..."
         style={{
           width:"40%",
           padding:"10px",
@@ -139,11 +139,15 @@ function TopNavbar({ user, cartCount, openCart }) {
 
         {!user ? (
           <>
-            <button className="btn-ghost">Masuk</button>
-            <button className="btn-primary">Daftar</button>
+            <button className="btn-ghost" onClick={() => openAuth("login")}>
+              Login
+            </button>
+            <button className="btn-primary" onClick={() => openAuth("register")}>
+              Register
+            </button>
           </>
         ) : (
-          <span>{user}</span>
+          <span style={{fontSize:14}}>Halo, <strong>{user}</strong></span>
         )}
       </div>
     </div>
@@ -188,7 +192,7 @@ const products = [
 function HomePage({addToCart}){
   return(
     <div style={{padding:30}}>
-      <h2 style={{marginBottom:10}}>Produk Untuk Kamu</h2>
+      <h2 style={{marginBottom:10}}>Product</h2>
 
       <div style={{
         display:"grid",
@@ -238,7 +242,7 @@ function HomePage({addToCart}){
                 className="btn-cart"
                 onClick={()=>addToCart(p)}
               >
-                + Keranjang
+                + Cart
               </button>
             </div>
 
@@ -251,7 +255,7 @@ function HomePage({addToCart}){
 
 function CartPopup({ cart, close, remove }) {
   const total = cart.reduce((sum,item)=> sum + item.price * item.qty, 0);
-  
+
   return(
     <div style={{
       position:"fixed",
@@ -265,7 +269,7 @@ function CartPopup({ cart, close, remove }) {
       zIndex:999
     }}>
       
-      <h3>Keranjang</h3>
+      <h3>Cart</h3>
 
       <button 
         onClick={close}
@@ -283,7 +287,7 @@ function CartPopup({ cart, close, remove }) {
       </button>
 
       {cart.length === 0 ? (
-        <p>Keranjang kosong</p>
+        <p>Your cart is empty</p>
       ) : (
         <>
           {cart.map(item=>(
@@ -326,10 +330,130 @@ function CartPopup({ cart, close, remove }) {
   );
 }
 
+function AuthModal({ close, setUser, mode }) {
+  const [isLogin,setIsLogin] = useState(mode === "login");
+  const [name,setName] = useState("");
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if(isLogin){
+      // login → ambil nama dari email
+      setUser(email.split("@")[0]);
+    } else {
+      // register → pakai nama
+      setUser(name);
+    }
+
+    close();
+  };
+
+  return(
+    <div style={{
+      position:"fixed",
+      top:0,
+      left:0,
+      width:"100%",
+      height:"100%",
+      background:"rgba(0,0,0,0.4)",
+      display:"flex",
+      justifyContent:"center",
+      alignItems:"center",
+      zIndex:999
+    }}>
+
+      <div style={{
+        background:"white",
+        padding:30,
+        borderRadius:12,
+        width:350,
+        position:"relative"
+      }}>
+
+        {/* tombol X */}
+        <button onClick={close} style={{
+          position:"absolute",
+          top:10,
+          right:10,
+          border:"none",
+          background:"none",
+          fontSize:18,
+          cursor:"pointer"
+        }}>
+          ✖
+        </button>
+
+        <h2 style={{textAlign:"center",color:"#e91e8c"}}>
+          {isLogin ? "Masuk" : "Daftar"}
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+
+          {!isLogin && (
+            <input
+              placeholder="Nama"
+              value={name}
+              onChange={e=>setName(e.target.value)}
+              style={inputStyle}
+              required
+            />
+          )}
+
+          <input
+            placeholder="Email"
+            type="email"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            style={inputStyle}
+            required
+          />
+
+          <input
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={e=>setPassword(e.target.value)}
+            style={inputStyle}
+            required
+          />
+
+          <button className="btn-cart" type="submit">
+            {isLogin ? "Masuk" : "Daftar"}
+          </button>
+        </form>
+
+        <p style={{textAlign:"center",marginTop:10}}>
+          {isLogin ? "Belum punya akun?" : "Sudah punya akun?"}{" "}
+          <span 
+            style={{color:"#e91e8c",cursor:"pointer"}}
+            onClick={()=>setIsLogin(!isLogin)}
+          >
+            {isLogin ? "Daftar" : "Masuk"}
+          </span>
+        </p>
+
+      </div>
+    </div>
+  );
+}
+
+const inputStyle = {
+  width:"100%",
+  padding:"10px",
+  margin:"8px 0",
+  borderRadius:"8px",
+  border:"1px solid #ccc",
+  boxSizing:"border-box", 
+  display:"block" 
+};
+
 export default function App(){
   const [user,setUser] = useState(null);
   const [cart,setCart] = useState([]);
   const [showCart,setShowCart] = useState(false);
+  const [showAuth, setShowAuth] = useState(null);
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -356,6 +480,7 @@ export default function App(){
         user={user} 
         cartCount={cart.reduce((a,b)=>a+b.qty,0)}
         openCart={()=>setShowCart(true)}
+        openAuth={(mode) => setShowAuth(mode)}
       />
 
       <HomePage addToCart={addToCart}/>
@@ -365,6 +490,13 @@ export default function App(){
           cart={cart}
           close={()=>setShowCart(false)}
           remove={removeFromCart}
+        />
+      )}
+      {showAuth && (
+        <AuthModal
+          mode={showAuth}     
+          close={() => setShowAuth(null)}
+          setUser={setUser}
         />
       )}
     </>
