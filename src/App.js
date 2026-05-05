@@ -32,10 +32,67 @@ const GlobalStyles = () => (
       padding:15px;
       box-shadow:0 2px 8px rgba(0,0,0,0.1);
     }
+
+    .product-card{
+      background:white;
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);
+      transition:0.2s;
+    }
+
+    .product-card:hover{
+      transform:translateY(-5px);
+    }
+
+    .product-img{
+      background:#f3eaf0;
+      height:150px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:50px;
+    }
+
+    .badge{
+      position:absolute;
+      top:10px;
+      left:10px;
+      background:#ff4d4f;
+      color:white;
+      font-size:12px;
+      padding:3px 8px;
+      border-radius:6px;
+      font-weight:bold;
+    }
+
+    .old-price{
+      text-decoration:line-through;
+      color:#999;
+      font-size:13px;
+    }
+
+    .discount{
+      color:#ff4d4f;
+      font-size:12px;
+      margin-left:5px;
+    }
+
+    .btn-cart{
+      width:100%;
+      margin-top:10px;
+      padding:10px;
+      background:linear-gradient(90deg,#ff4d8d,#e91e8c);
+      color:white;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
+    }
   `}</style>
 );
 
-function TopNavbar({ user }) {
+function TopNavbar({ user, cartCount, openCart }) {
   return (
     <div style={{
       display:"flex",
@@ -60,7 +117,26 @@ function TopNavbar({ user }) {
         }}
       />
 
-      <div style={{display:"flex",gap:10}}>
+      <div style={{display:"flex",gap:15,alignItems:"center"}}>
+
+        <div style={{position:"relative",cursor:"pointer"}} onClick={openCart}>
+          🛒
+          {cartCount > 0 && (
+            <span style={{
+              position:"absolute",
+              top:-8,
+              right:-10,
+              background:"#e91e8c",
+              color:"white",
+              borderRadius:"50%",
+              padding:"2px 6px",
+              fontSize:12
+            }}>
+              {cartCount}
+            </span>
+          )}
+        </div>
+
         {!user ? (
           <>
             <button className="btn-ghost">Masuk</button>
@@ -75,36 +151,97 @@ function TopNavbar({ user }) {
 }
 
 const products = [
-  {id:1,name:"Lipstik Velvet Rose",price:85000,img:"💄"},
-  {id:2,name:"Tote Bag Pastel",price:125000,img:"👜"},
-  {id:3,name:"Skincare Glow",price:320000,img:"✨"},
-  {id:4,name:"Notebook Aesthetic",price:55000,img:"📓"},
+  {
+    id:1,
+    name:"Lipstik Velvet Rose",
+    price:72250,
+    oldPrice:85000,
+    discount:15,
+    img:"💄"
+  },
+  {
+    id:2,
+    name:"Tote Bag Pastel Bloom",
+    price:125000,
+    oldPrice:null,
+    discount:null,
+    img:"👜"
+  },
+  {
+    id:3,
+    name:"Skincare Glow Set",
+    price:256000,
+    oldPrice:320000,
+    discount:20,
+    img:"✨"
+  },
+  {
+    id:4,
+    name:"Notebook Aesthetic",
+    price:55000,
+    oldPrice:null,
+    discount:null,
+    img:"📓"
+  },
 ];
 
-function HomePage(){
+function HomePage({addToCart}){
   return(
     <div style={{padding:30}}>
-      <h2>Produk Untuk Kamu</h2>
+      <h2 style={{marginBottom:10}}>Produk Untuk Kamu</h2>
 
       <div style={{
         display:"grid",
-        gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",
-        gap:20,
-        marginTop:20
+        gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+        gap:20
       }}>
         {products.map(p=>(
-          <div key={p.id} className="card">
-            <div style={{fontSize:50,textAlign:"center"}}>{p.img}</div>
+          <div key={p.id} className="product-card">
+            
+            <div style={{position:"relative"}}>
+              {p.discount && (
+                <div className="badge">{p.discount}%</div>
+              )}
 
-            <h3 style={{fontSize:16}}>{p.name}</h3>
+              <div className="product-img">{p.img}</div>
+            </div>
 
-            <p style={{color:"#e91e8c",fontWeight:"bold"}}>
-              Rp {p.price.toLocaleString("id-ID")}
-            </p>
+            <div style={{padding:12}}>
+              <h3 style={{fontSize:15,marginBottom:5}}>
+                {p.name}
+              </h3>
 
-            <p style={{fontSize:12,color:"#777"}}>
-              ⭐ 4.9 • 100+ terjual
-            </p>
+              <p style={{
+                color:"#e91e8c",
+                fontWeight:"bold",
+                fontSize:16
+              }}>
+                Rp {p.price.toLocaleString("id-ID")}
+              </p>
+
+              {p.oldPrice && (
+                <div>
+                  <span className="old-price">
+                    Rp {p.oldPrice.toLocaleString("id-ID")}
+                  </span>
+                  <span className="discount">
+                    Hemat {p.discount}%
+                  </span>
+                </div>
+              )}
+
+              <p style={{fontSize:12,color:"#777"}}>
+                ⭐ 4.9 • 100+ terjual
+              </p>
+
+              <button 
+                className="btn-cart"
+                onClick={()=>addToCart(p)}
+              >
+                + Keranjang
+              </button>
+            </div>
+
           </div>
         ))}
       </div>
@@ -112,14 +249,124 @@ function HomePage(){
   );
 }
 
+function CartPopup({ cart, close, remove }) {
+  const total = cart.reduce((sum,item)=> sum + item.price * item.qty, 0);
+  
+  return(
+    <div style={{
+      position:"fixed",
+      top:0,
+      right:0,
+      width:"350px",
+      height:"100vh",
+      background:"white",
+      boxShadow:"-2px 0 10px rgba(0,0,0,0.2)",
+      padding:20,
+      zIndex:999
+    }}>
+      
+      <h3>Keranjang</h3>
+
+      <button 
+        onClick={close}
+        style={{
+          position:"absolute",
+          top:10,
+          right:10,
+          border:"none",
+          background:"none",
+          fontSize:18,
+          cursor:"pointer"
+        }}
+      >
+        ✖
+      </button>
+
+      {cart.length === 0 ? (
+        <p>Keranjang kosong</p>
+      ) : (
+        <>
+          {cart.map(item=>(
+            <div key={item.id} style={{
+              display:"flex",
+              justifyContent:"space-between",
+              marginBottom:15,
+              borderBottom:"1px solid #eee",
+              paddingBottom:10
+            }}>
+              <div>
+                <div>{item.name}</div>
+                <small>{item.qty} x Rp {item.price.toLocaleString("id-ID")}</small>
+              </div>
+
+              <button 
+                onClick={()=>remove(item.id)}
+                style={{
+                  background:"none",
+                  border:"none",
+                  color:"red",
+                  cursor:"pointer"
+                }}
+              >
+                Hapus
+              </button>
+            </div>
+          ))}
+
+          <h4>
+            Total: Rp {total.toLocaleString("id-ID")}
+          </h4>
+
+          <button className="btn-cart">
+            Checkout
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function App(){
   const [user,setUser] = useState(null);
+  const [cart,setCart] = useState([]);
+  const [showCart,setShowCart] = useState(false);
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const exist = prev.find(item => item.id === product.id);
+      if(exist){
+        return prev.map(item =>
+          item.id === product.id
+            ? {...item, qty: item.qty + 1}
+            : item
+        );
+      }
+      return [...prev, {...product, qty:1}];
+    });
+  };
+
+  const removeFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
 
   return(
     <>
       <GlobalStyles/>
-      <TopNavbar user={user}/>
-      <HomePage/>
+      <TopNavbar 
+        user={user} 
+        cartCount={cart.reduce((a,b)=>a+b.qty,0)}
+        openCart={()=>setShowCart(true)}
+      />
+
+      <HomePage addToCart={addToCart}/>
+
+      {showCart && (
+        <CartPopup 
+          cart={cart}
+          close={()=>setShowCart(false)}
+          remove={removeFromCart}
+        />
+      )}
     </>
   );
 }
