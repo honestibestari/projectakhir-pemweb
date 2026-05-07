@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const FIXED_SELLER = "MeiHua Official";
+
 const GlobalStyles = () => (
   <style>{`
     body {
@@ -207,21 +209,126 @@ const categories = [
 ];
 
 const initialProducts = [
-  { id:1,  cat:"cincin", name:"Cincin Emas 18K Rose Gold",     price:720000,  oldPrice:850000,  discount:15,   img:null, rating:4.9, sold:"100rb+", seller:"MeiHua Official" },
-  { id:2,  cat:"kalung", name:"Kalung Mutiara Putih Elegan",   price:325000,  oldPrice:null,    discount:null, img:null, rating:4.8, sold:"50rb+",  seller:"PearlShop" },
-  { id:3,  cat:"anting", name:"Anting Berlian Swarovski",      price:256000,  oldPrice:320000,  discount:20,   img:null, rating:5.0, sold:"500rb+", seller:"DiamondStore" },
-  { id:4,  cat:"gelang", name:"Gelang Charm Silver 925",       price:185000,  oldPrice:null,    discount:null, img:null, rating:4.7, sold:"200rb+", seller:"SilverArt" },
-  { id:5,  cat:"bros",   name:"Bros Bunga Kristal Ungu",       price:89000,   oldPrice:110000,  discount:19,   img:null, rating:4.9, sold:"30rb+",  seller:"BrosQueen" },
-  { id:6,  cat:"set",    name:"Set Perhiasan Couple Emas",     price:1250000, oldPrice:1500000, discount:17,   img:null, rating:4.8, sold:"10rb+",  seller:"MeiHua Official" },
-  { id:7,  cat:"cincin", name:"Cincin Perak Ukir Bunga",       price:145000,  oldPrice:null,    discount:null, img:null, rating:4.6, sold:"80rb+",  seller:"SilverCraft" },
-  { id:8,  cat:"kalung", name:"Kalung Liontin Bintang Emas",   price:380000,  oldPrice:420000,  discount:10,   img:null, rating:4.9, sold:"150rb+", seller:"StarJewel" },
-  { id:9,  cat:"anting", name:"Anting Hoop Gold Filled",       price:175000,  oldPrice:null,    discount:null, img:null, rating:4.7, sold:"60rb+",  seller:"HoopStyle" },
-  { id:10, cat:"gelang", name:"Gelang Batu Opal Warna-warni",  price:220000,  oldPrice:260000,  discount:15,   img:null, rating:4.8, sold:"40rb+",  seller:"StoneGems" },
-  { id:11, cat:"bros",   name:"Bros Vintage Kelopak Enamel",   price:65000,   oldPrice:null,    discount:null, img:null, rating:4.5, sold:"25rb+",  seller:"VintagePin" },
-  { id:12, cat:"set",    name:"Set Pengantin Emas Putih",      price:2800000, oldPrice:3200000, discount:13,   img:null, rating:5.0, sold:"5rb+",   seller:"BridalGold" },
+  { id:1,  cat:"cincin", name:"Cincin Emas 18K Rose Gold",     price:720000,  oldPrice:850000,  discount:15,   img:null, rating:4.9, sold:"100rb+", seller:FIXED_SELLER },
+  { id:2,  cat:"kalung", name:"Kalung Mutiara Putih Elegan",   price:325000,  oldPrice:null,    discount:null, img:null, rating:4.8, sold:"50rb+",  seller:FIXED_SELLER },
+  { id:3,  cat:"anting", name:"Anting Berlian Swarovski",      price:256000,  oldPrice:320000,  discount:20,   img:null, rating:5.0, sold:"500rb+", seller:FIXED_SELLER },
+  { id:4,  cat:"gelang", name:"Gelang Charm Silver 925",       price:185000,  oldPrice:null,    discount:null, img:null, rating:4.7, sold:"200rb+", seller:FIXED_SELLER },
+  { id:5,  cat:"bros",   name:"Bros Bunga Kristal Ungu",       price:89000,   oldPrice:110000,  discount:19,   img:null, rating:4.9, sold:"30rb+",  seller:FIXED_SELLER },
+  { id:6,  cat:"set",    name:"Set Perhiasan Couple Emas",     price:1250000, oldPrice:1500000, discount:17,   img:null, rating:4.8, sold:"10rb+",  seller:FIXED_SELLER },
+  { id:7,  cat:"cincin", name:"Cincin Perak Ukir Bunga",       price:145000,  oldPrice:null,    discount:null, img:null, rating:4.6, sold:"80rb+",  seller:FIXED_SELLER },
+  { id:8,  cat:"kalung", name:"Kalung Liontin Bintang Emas",   price:380000,  oldPrice:420000,  discount:10,   img:null, rating:4.9, sold:"150rb+", seller:FIXED_SELLER },
+  { id:9,  cat:"anting", name:"Anting Hoop Gold Filled",       price:175000,  oldPrice:null,    discount:null, img:null, rating:4.7, sold:"60rb+",  seller:FIXED_SELLER },
+  { id:10, cat:"gelang", name:"Gelang Batu Opal Warna-warni",  price:220000,  oldPrice:260000,  discount:15,   img:null, rating:4.8, sold:"40rb+",  seller:FIXED_SELLER },
+  { id:11, cat:"bros",   name:"Bros Vintage Kelopak Enamel",   price:65000,   oldPrice:null,    discount:null, img:null, rating:4.5, sold:"25rb+",  seller:FIXED_SELLER },
+  { id:12, cat:"set",    name:"Set Pengantin Emas Putih",      price:2800000, oldPrice:3200000, discount:13,   img:null, rating:5.0, sold:"5rb+",   seller:FIXED_SELLER },
 ];
 
-// ─── ADMIN PANEL ────────────────────────────────────────────────
+function LogoutConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div style={{
+      position:"fixed", top:0, left:0,
+      width:"100%", height:"100%",
+      background:"rgba(0,0,0,0.45)",
+      display:"flex", justifyContent:"center", alignItems:"center",
+      zIndex:1000
+    }}>
+      <div style={{
+        background:"white", borderRadius:16,
+        padding:"32px 28px", width:320,
+        textAlign:"center",
+        boxShadow:"0 8px 32px rgba(0,0,0,0.18)"
+      }}>
+        <h3 style={{ margin:"0 0 8px", fontSize:17, color:"#1a1a1a" }}>
+          Yakin ingin keluar?
+        </h3>
+        <p style={{ margin:"0 0 24px", fontSize:13, color:"#888", lineHeight:1.5 }}>
+          Kamu akan keluar dari akun MeiHua Official.
+        </p>
+        <div style={{ display:"flex", gap:10 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex:1, padding:"11px",
+              borderRadius:10, border:"1px solid #ddd",
+              background:"white", color:"#555",
+              fontSize:14, fontWeight:"bold",
+              cursor:"pointer"
+            }}
+          >
+            Tidak
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex:1, padding:"11px",
+              borderRadius:10, border:"none",
+              background:"#e91e8c", color:"white",
+              fontSize:14, fontWeight:"bold",
+              cursor:"pointer",
+              boxShadow:"0 2px 8px rgba(233,30,140,0.3)"
+            }}
+          >
+            Ya
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeleteConfirmModal({ productName, onConfirm, onCancel }) {
+  return (
+    <div style={{
+      position:"fixed", top:0, left:0,
+      width:"100%", height:"100%",
+      background:"rgba(0,0,0,0.45)",
+      display:"flex", justifyContent:"center", alignItems:"center",
+      zIndex:1000
+    }}>
+      <div style={{
+        background:"white", borderRadius:16,
+        padding:"32px 28px", width:320,
+        textAlign:"center",
+        boxShadow:"0 8px 32px rgba(0,0,0,0.18)"
+      }}>
+        <h3 style={{ margin:"0 0 8px", fontSize:17, color:"#1a1a1a" }}>
+          Yakin ingin menghapus?
+        </h3>
+        <p style={{ margin:"0 0 24px", fontSize:13, color:"#888", lineHeight:1.5 }}>
+          Produk <strong style={{ color:"#333" }}>{productName}</strong> akan dihapus secara permanen.
+        </p>
+        <div style={{ display:"flex", gap:10 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex:1, padding:"11px",
+              borderRadius:10, border:"1px solid #ddd",
+              background:"white", color:"#555",
+              fontSize:14, fontWeight:"bold",
+              cursor:"pointer"
+            }}
+          >
+            Tidak
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex:1, padding:"11px",
+              borderRadius:10, border:"none",
+              background:"#ff4d4f", color:"white",
+              fontSize:14, fontWeight:"bold",
+              cursor:"pointer",
+              boxShadow:"0 2px 8px rgba(255,77,79,0.3)"
+            }}
+          >
+            Ya
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminPanel({ products, setProducts, user, onClose }) {
   const [tab, setTab] = useState("list");
   const [editTarget, setEditTarget] = useState(null);
@@ -229,13 +336,20 @@ function AdminPanel({ products, setProducts, user, onClose }) {
   const imgInputRef = React.useRef();
   const [form, setForm] = useState({
     name:"", cat:"cincin", price:"", oldPrice:"",
-    discount:"", seller:"", rating:"4.9", sold:""
+    discount:"", rating:"4.9", sold:""
   });
 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   const inputS = {
-    width:"100%", padding:"10px 14px", borderRadius:8,
-    border:"1px solid #e0e0e0", fontSize:13,
-    boxSizing:"border-box", display:"block", outline:"none",
+    width:"100%", 
+    padding:"10px 14px", 
+    borderRadius:8,
+    border:"1px solid #e0e0e0", 
+    fontSize:13,
+    boxSizing:"border-box", 
+    display:"block", 
+    outline:"none",
   };
   const labelS = {
     fontSize:12, color:"#666",
@@ -243,7 +357,7 @@ function AdminPanel({ products, setProducts, user, onClose }) {
   };
 
   const resetForm = () => {
-    setForm({ name:"", cat:"cincin", price:"", oldPrice:"", discount:"", seller:"", rating:"4.9", sold:"" });
+    setForm({ name:"", cat:"cincin", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" });
     setPreviewImg(null);
     setEditTarget(null);
   };
@@ -253,21 +367,29 @@ function AdminPanel({ products, setProducts, user, onClose }) {
     setForm({
       name:p.name, cat:p.cat,
       price:p.price, oldPrice:p.oldPrice || "",
-      discount:p.discount || "", seller:p.seller,
+      discount:p.discount || "",
       rating:p.rating, sold:p.sold
     });
     setPreviewImg(p.img);
     setTab("edit");
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Hapus produk ini?"))
-      setProducts(prev => prev.filter(p => p.id !== id));
+  const handleDelete = (p) => {
+    setDeleteTarget(p);
+  };
+
+  const confirmDelete = () => {
+    setProducts(prev => prev.filter(p => p.id !== deleteTarget.id));
+    setDeleteTarget(null);
+  };
+
+  const cancelDelete = () => {
+    setDeleteTarget(null);
   };
 
   const handleSave = () => {
-    if (!form.name || !form.price || !form.seller) {
-      alert("Nama, harga, dan toko wajib diisi!"); return;
+    if (!form.name || !form.price) {
+      alert("Nama dan harga wajib diisi!"); return;
     }
     if (tab === "add") {
       setProducts(prev => [...prev, {
@@ -278,7 +400,7 @@ function AdminPanel({ products, setProducts, user, onClose }) {
         discount: form.discount ? Number(form.discount) : null,
         img: previewImg,
         rating: Number(form.rating),
-        sold: form.sold, seller: form.seller
+        sold: form.sold, seller: FIXED_SELLER
       }]);
     } else {
       setProducts(prev => prev.map(p =>
@@ -288,7 +410,7 @@ function AdminPanel({ products, setProducts, user, onClose }) {
           oldPrice:form.oldPrice ? Number(form.oldPrice) : null,
           discount:form.discount ? Number(form.discount) : null,
           img:previewImg, rating:Number(form.rating),
-          sold:form.sold, seller:form.seller
+          sold:form.sold, seller: FIXED_SELLER
         } : p
       ));
     }
@@ -302,7 +424,6 @@ function AdminPanel({ products, setProducts, user, onClose }) {
     </div>
   );
 
-  // ── FORM FULL SCREEN (Tambah / Edit) ──────────────────────────
   if (tab === "add" || tab === "edit") {
     return (
       <div style={{
@@ -311,7 +432,6 @@ function AdminPanel({ products, setProducts, user, onClose }) {
         background:"#f4f6f8", zIndex:200,
         display:"flex", flexDirection:"column", overflow:"hidden"
       }}>
-        {/* Header form */}
         <div style={{
           background:"white", borderBottom:"1px solid #eee",
           padding:"14px 28px",
@@ -334,16 +454,14 @@ function AdminPanel({ products, setProducts, user, onClose }) {
               fontSize:13, cursor:"pointer", color:"#555"
             }}
           >
-            ✖ Batal
+            Batal
           </button>
         </div>
 
-        {/* Scrollable body */}
         <div style={{ flex:1, overflowY:"auto", padding:"28px", display:"flex", justifyContent:"center" }}>
           <div style={{ width:"100%", maxWidth:900 }}>
             <div style={{ display:"grid", gridTemplateColumns:"200px 1fr", gap:28, alignItems:"start" }}>
 
-              {/* Kolom kiri: foto */}
               <div>
                 <label style={labelS}>Foto Produk</label>
                 <div
@@ -375,7 +493,6 @@ function AdminPanel({ products, setProducts, user, onClose }) {
                 />
               </div>
 
-              {/* Kolom kanan: fields */}
               <div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
                   <div style={{ gridColumn:"1/-1" }}>
@@ -386,18 +503,54 @@ function AdminPanel({ products, setProducts, user, onClose }) {
                     </Field>
                   </div>
                   <Field label="Kategori">
-                    <select style={inputS} value={form.cat}
-                      onChange={e => setForm({ ...form, cat:e.target.value })}>
-                      {categories.map(c => (
-                        <option key={c.id} value={c.id}>{c.label}</option>
-                      ))}
-                    </select>
+                    <div style={{ position:"relative" }}>
+                      <select
+                        style={{
+                          ...inputS,
+                          appearance:"none",
+                          WebkitAppearance:"none",
+                          MozAppearance:"none",
+                          paddingRight:28,
+                          cursor:"pointer",
+                          background:"white",
+                        }}
+                        value={form.cat}
+                        onChange={e => setForm({ ...form, cat:e.target.value })}
+                      >
+                        {categories.map(c => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </select>
+                      <span style={{
+                        position:"absolute",
+                        right:10,
+                        top:"50%",
+                        transform:"translateY(-50%)",
+                        pointerEvents:"none",
+                        color:"#aaa",
+                        fontSize:12,
+                        lineHeight:1,
+                      }}>▾</span>
+                    </div>
                   </Field>
-                  <Field label="Nama Toko *">
-                    <input style={inputS} placeholder="cth: MeiHua Official"
-                      value={form.seller}
-                      onChange={e => setForm({ ...form, seller:e.target.value })} />
+
+                  <Field label="Nama Toko">
+                    <div style={{ position:"relative" }}>
+                      <input
+                        value={FIXED_SELLER}
+                        readOnly
+                        tabIndex={-1}
+                        style={{
+                          ...inputS,
+                          background:"#f5f5f5",
+                          color:"#888",
+                          cursor:"not-allowed",
+                          border:"1px solid #e8e8e8"
+                        }}
+                      />
+                    </div>
                   </Field>
+
                   <Field label="Harga Jual *">
                     <input style={inputS} type="number" placeholder="cth: 150000"
                       value={form.price}
@@ -413,17 +566,6 @@ function AdminPanel({ products, setProducts, user, onClose }) {
                       value={form.discount}
                       onChange={e => setForm({ ...form, discount:e.target.value })} />
                   </Field>
-                  <Field label="Jumlah Terjual">
-                    <input style={inputS} placeholder="cth: 100rb+"
-                      value={form.sold}
-                      onChange={e => setForm({ ...form, sold:e.target.value })} />
-                  </Field>
-                  <Field label="Rating (0–5)">
-                    <input style={inputS} type="number" step="0.1" min="0" max="5"
-                      placeholder="cth: 4.9"
-                      value={form.rating}
-                      onChange={e => setForm({ ...form, rating:e.target.value })} />
-                  </Field>
                 </div>
 
                 <button onClick={handleSave} style={{
@@ -433,7 +575,7 @@ function AdminPanel({ products, setProducts, user, onClose }) {
                   fontWeight:"bold", fontSize:15, cursor:"pointer",
                   boxShadow:"0 2px 8px rgba(233,30,140,0.3)"
                 }}>
-                  {tab === "add" ? "💾 Simpan Produk" : "✔ Update Produk"}
+                  {tab === "add" ? "Simpan Produk" : "Update Produk"}
                 </button>
               </div>
             </div>
@@ -443,11 +585,8 @@ function AdminPanel({ products, setProducts, user, onClose }) {
     );
   }
 
-  // ── LIST VIEW ─────────────────────────────────────────────────
   return (
     <div style={{ height:"100%", display:"flex", flexDirection:"column", overflow:"hidden" }}>
-
-      {/* Header admin */}
       <div style={{
         background:"white", borderBottom:"1px solid #eee",
         padding:"14px 20px",
@@ -455,9 +594,9 @@ function AdminPanel({ products, setProducts, user, onClose }) {
         flexShrink:0
       }}>
         <div>
-          <h2 style={{ margin:0, fontSize:18, color:"#1a1a1a", fontWeight:700 }}>Panel Admin</h2>
+          <h2 style={{ margin:0, fontSize:18, color:"#1a1a1a", fontWeight:700 }}>Admin</h2>
           <p style={{ margin:"3px 0 0", fontSize:12, color:"#888" }}>
-            Selamat datang, <strong>{user}</strong> — kelola produk toko Anda
+            Selamat datang, <strong>{user}</strong>
           </p>
         </div>
         <div style={{ display:"flex", gap:10, alignItems:"center" }}>
@@ -470,7 +609,6 @@ function AdminPanel({ products, setProducts, user, onClose }) {
           }}>
             + Tambah Produk
           </button>
-          {/* Tombol keluar admin → kembali ke halaman toko */}
           <button onClick={onClose} style={{
             display:"flex", alignItems:"center", gap:6,
             background:"#fff0f7", color:"#e91e8c",
@@ -478,15 +616,12 @@ function AdminPanel({ products, setProducts, user, onClose }) {
             borderRadius:8, padding:"9px 18px",
             fontSize:13, cursor:"pointer", fontWeight:"bold"
           }}>
-            🏠 Lihat Toko
+            Kunjungi Toko
           </button>
         </div>
       </div>
 
-      {/* Scrollable content */}
       <div style={{ flex:1, overflowY:"auto", padding:20, background:"#f4f6f8" }}>
-
-        {/* Stats */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:18 }}>
           {[
             { label:"Total Produk", value:products.length,                       color:"#e91e8c" },
@@ -505,7 +640,6 @@ function AdminPanel({ products, setProducts, user, onClose }) {
           ))}
         </div>
 
-        {/* Tabel produk */}
         <div style={{ background:"white", borderRadius:10, overflow:"hidden", boxShadow:"0 1px 4px rgba(0,0,0,0.07)" }}>
           <div style={{
             display:"grid",
@@ -593,7 +727,8 @@ function AdminPanel({ products, setProducts, user, onClose }) {
                 }}>
                   Edit
                 </button>
-                <button onClick={() => handleDelete(p.id)} style={{
+                {/* ── DIUBAH: kirim objek p, bukan hanya id ── */}
+                <button onClick={() => handleDelete(p)} style={{
                   padding:"5px 12px", borderRadius:6,
                   border:"1px solid #ffccc7", background:"#fff2f0",
                   color:"#ff4d4f", fontSize:12, cursor:"pointer", fontWeight:"600"
@@ -605,11 +740,19 @@ function AdminPanel({ products, setProducts, user, onClose }) {
           ))}
         </div>
       </div>
+
+      {/* ── BARU: render modal hapus di dalam AdminPanel ── */}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          productName={deleteTarget.name}
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
     </div>
   );
 }
 
-// ─── NAVBAR ─────────────────────────────────────────────────────
 function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout }) {
   return (
     <div style={{
@@ -619,7 +762,7 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
       position:"sticky", top:0, zIndex:100, flexShrink:0
     }}>
       <div style={{ fontSize:20, fontWeight:"bold", color:"#e91e8c", whiteSpace:"nowrap" }}>
-        MeiHua Jewelry
+        MeiHua Official
       </div>
 
       <input placeholder="Cari produk..."
@@ -657,9 +800,8 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
               borderRadius:20, padding:"6px 14px",
               fontSize:12, cursor:"pointer", fontWeight:"bold"
             }}>
-              ⚙ Admin
+              Admin
             </button>
-            {/* Tombol keluar dari akun */}
             <button onClick={onLogout} style={{
               background:"none", border:"none",
               color:"#aaa", fontSize:12,
@@ -674,7 +816,6 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
   );
 }
 
-// ─── PRODUCT GRID (read-only, tanpa upload foto) ─────────────────
 function ProductGrid({ products, cart, addToCart, removeFromCart }) {
   if (products.length === 0) {
     return (
@@ -699,7 +840,6 @@ function ProductGrid({ products, cart, addToCart, removeFromCart }) {
         const item = cart.find(i => i.id === p.id);
         return (
           <div key={p.id} className="product-card">
-            {/* Gambar produk — hanya tampilan, tanpa upload */}
             <div className="product-img">
               {p.discount && <div className="badge">{p.discount}%</div>}
               {p.img
@@ -747,7 +887,6 @@ function ProductGrid({ products, cart, addToCart, removeFromCart }) {
   );
 }
 
-// ─── CART POPUP ──────────────────────────────────────────────────
 function CartPopup({ cart, close, remove }) {
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   return (
@@ -804,7 +943,6 @@ function CartPopup({ cart, close, remove }) {
   );
 }
 
-// ─── AUTH MODAL ──────────────────────────────────────────────────
 function AuthModal({ close, setUser, mode, onLogin }) {
   const [isLogin, setIsLogin] = useState(mode === "login");
   const [name, setName] = useState("");
@@ -848,7 +986,7 @@ function AuthModal({ close, setUser, mode, onLogin }) {
           <h2 style={{ margin:0, fontSize:18, color:"#1a1a1a" }}>
             {isLogin ? "Masuk ke Akun" : "Buat Akun Baru"}
           </h2>
-          <p style={{ margin:"4px 0 0", fontSize:12, color:"#aaa" }}>MeiHua Jewelry</p>
+          <p style={{ margin:"4px 0 0", fontSize:12, color:"#aaa" }}>MeiHua Official</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -889,7 +1027,6 @@ function AuthModal({ close, setUser, mode, onLogin }) {
   );
 }
 
-// ─── APP ─────────────────────────────────────────────────────────
 export default function App() {
   const [user, setUser] = useState(null);
   const [cart, setCart] = useState([]);
@@ -899,6 +1036,7 @@ export default function App() {
   const [adminMode, setAdminMode] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSub, setActiveSub] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -918,8 +1056,17 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     setUser(null);
     setAdminMode(false);
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   const handleCatClick = (cat) => {
@@ -937,7 +1084,6 @@ export default function App() {
     <>
       <GlobalStyles />
 
-      {/* Navbar hanya tampil di halaman toko, tidak di admin */}
       {!adminMode && (
         <TopNavbar
           user={user}
@@ -950,20 +1096,17 @@ export default function App() {
       )}
 
       {user && adminMode ? (
-        // ── TAMPILAN ADMIN ──────────────────────────────────────
         <div style={{ height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden" }}>
           <AdminPanel
             products={products}
             setProducts={setProducts}
             user={user}
-            onClose={() => setAdminMode(false)}   // ← tombol "🏠 Lihat Toko" di header admin
+            onClose={() => setAdminMode(false)}
           />
         </div>
       ) : (
-        // ── TAMPILAN TOKO (HOME PAGE) ───────────────────────────
         <div style={{ display:"flex", height:"calc(100vh - 57px)", overflow:"hidden" }}>
 
-          {/* Sidebar kategori */}
           <div className="sidebar">
             <div
               className={`cat-item ${!activeCategory ? "active" : ""}`}
@@ -981,7 +1124,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Submenu */}
           <div className={`submenu ${activeCategory ? "open" : ""}`}>
             {activeCatData && (
               <div className="submenu-inner">
@@ -998,7 +1140,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Konten produk */}
           <div style={{ flex:1, overflowY:"auto", padding:16 }}>
             <div style={{
               fontSize:12, color:"#888", marginBottom:12,
@@ -1036,7 +1177,6 @@ export default function App() {
               <span style={{ fontSize:12, color:"#888" }}>{filteredProducts.length} produk</span>
             </div>
 
-            {/* Grid produk — read only, tanpa fitur upload foto */}
             <ProductGrid
               products={filteredProducts}
               cart={cart}
@@ -1057,6 +1197,13 @@ export default function App() {
           close={() => setShowAuth(null)}
           setUser={setUser}
           onLogin={() => setAdminMode(true)}
+        />
+      )}
+
+      {showLogoutConfirm && (
+        <LogoutConfirmModal
+          onConfirm={confirmLogout}
+          onCancel={cancelLogout}
         />
       )}
     </>
