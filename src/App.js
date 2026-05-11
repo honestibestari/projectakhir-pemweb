@@ -1,581 +1,625 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+
+const C = {
+  primary:   "#C8102E",   
+  primary2:  "#A00D25",
+  gold:      "#B8963E",
+  goldLight: "#F5EDD6",
+  dark:      "#1A1A1A",
+  mid:       "#4A4A4A",
+  muted:     "#8A8A8A",
+  border:    "#E8E4DE",
+  surface:   "#FAFAF8",
+  white:     "#FFFFFF",
+  success:   "#166534",
+  successBg: "#DCFCE7",
+  warning:   "#92400E",
+  warningBg: "#FEF3C7",
+  info:      "#1E40AF",
+  infoBg:    "#DBEAFE",
+  danger:    "#991B1B",
+  dangerBg:  "#FEE2E2",
+};
 
 const FIXED_SELLER = "MeiHua Official";
+const fmt = (n) => "Rp " + Number(n).toLocaleString("id-ID");
+
+const LogoIcon = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <rect width="32" height="32" rx="8" fill={C.primary}/>
+    <path d="M16 6L19.5 13H26L20.5 17.5L22.5 25L16 21L9.5 25L11.5 17.5L6 13H12.5L16 6Z"
+      fill={C.gold} stroke={C.gold} strokeWidth="0.5" strokeLinejoin="round"/>
+    <circle cx="16" cy="16" r="3" fill={C.white} opacity="0.9"/>
+  </svg>
+);
+
+const Icon = {
+  dashboard: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+  product:   () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>,
+  order:     () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>,
+  category:  () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>,
+  report:    () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
+  cart:      () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+  search:    () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+  close:     () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>,
+  plus:      () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>,
+  edit:      () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  trash:     () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  check:     () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
+  user:      () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  logout:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>,
+  photo:     () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  star:      () => <svg width="11" height="11" viewBox="0 0 24 24" fill={C.gold} stroke={C.gold} strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  verified:  () => <svg width="12" height="12" viewBox="0 0 24 24" fill={C.success} stroke="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
+  chevron:   () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>,
+};
 
 const GlobalStyles = () => (
   <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
     body {
-      margin:0;
-      font-family:Arial, sans-serif;
-      background:#f5f5f5;
+      font-family: 'DM Sans', sans-serif;
+      background: ${C.surface};
+      color: ${C.dark};
+      -webkit-font-smoothing: antialiased;
     }
-    .btn-primary{
-      background:#e91e8c;
-      color:white;
-      padding:8px 16px;
-      border:none;
-      border-radius:20px;
-      cursor:pointer;
-      font-weight:bold;
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 4px; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: ${C.primary}; color: ${C.white};
+      padding: 9px 20px; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: 600; font-size: 13px;
+      font-family: 'DM Sans', sans-serif; letter-spacing: .2px;
+      transition: background .15s, transform .1s;
     }
-    .btn-ghost{
-      background:white;
-      border:1px solid #ccc;
-      padding:8px 16px;
-      border-radius:20px;
-      cursor:pointer;
+    .btn-primary:hover { background: ${C.primary2}; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: ${C.white}; color: ${C.dark};
+      padding: 8px 18px; border: 1.5px solid ${C.border};
+      border-radius: 8px; cursor: pointer; font-weight: 500;
+      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      transition: border-color .15s, background .15s;
     }
-    .product-card{
-      background:white;
-      border-radius:8px;
-      overflow:hidden;
-      box-shadow:0 1px 4px rgba(0,0,0,0.08);
-      transition:0.2s;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
+    .btn-outline:hover { border-color: ${C.primary}; color: ${C.primary}; background: #FFF8F8; }
+
+    .btn-danger {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: ${C.dangerBg}; color: ${C.danger};
+      padding: 7px 14px; border: 1.5px solid #FECACA;
+      border-radius: 8px; cursor: pointer; font-weight: 600;
+      font-size: 12px; font-family: 'DM Sans', sans-serif;
+      transition: background .15s;
     }
-    .product-card:hover{
-      box-shadow:0 4px 12px rgba(0,0,0,0.15);
-      transform:translateY(-2px);
+    .btn-danger:hover { background: #FEE2E2; }
+
+    .btn-edit {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: ${C.white}; color: ${C.primary};
+      padding: 7px 14px; border: 1.5px solid ${C.border};
+      border-radius: 8px; cursor: pointer; font-weight: 600;
+      font-size: 12px; font-family: 'DM Sans', sans-serif;
+      transition: border-color .15s, background .15s;
     }
-    .product-img{
-      height:160px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-      background:#f3eaf0;
-      flex-shrink:0;
+    .btn-edit:hover { border-color: ${C.primary}; background: #FFF8F8; }
+
+    /* ── FORM ── */
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label {
+      font-size: 11px; font-weight: 600; color: ${C.muted};
+      text-transform: uppercase; letter-spacing: .6px;
     }
-    .product-img img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
+    .form-input {
+      width: 100%; padding: 10px 13px;
+      border: 1.5px solid ${C.border}; border-radius: 8px;
+      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      color: ${C.dark}; background: ${C.white};
+      outline: none; transition: border-color .15s, box-shadow .15s;
     }
-    .product-img .placeholder{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      color:#bbb;
-      font-size:12px;
-      width:100%;
-      height:100%;
+    .form-input:focus {
+      border-color: ${C.primary};
+      box-shadow: 0 0 0 3px rgba(200,16,46,.07);
     }
-    .product-img .placeholder span{ font-size:36px; }
-    .badge{
-      position:absolute;
-      top:6px; left:6px;
-      background:#ff4d4f;
-      color:white;
-      font-size:11px;
-      padding:2px 6px;
-      border-radius:4px;
-      font-weight:bold;
-      z-index:1;
+    .form-input::placeholder { color: #C0B9B1; }
+
+    /* ── CARDS ── */
+    .card {
+      background: ${C.white}; border: 1px solid ${C.border};
+      border-radius: 12px; overflow: hidden;
     }
-    .old-price{
-      text-decoration:line-through;
-      color:#999;
-      font-size:11px;
+
+    /* ── TABLE ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 10.5px; font-weight: 700; color: ${C.muted};
+      text-transform: uppercase; letter-spacing: .7px;
+      background: #F7F5F2; border-bottom: 1px solid ${C.border};
     }
-    .btn-cart{
-      width:100%;
-      padding:7px;
-      background:linear-gradient(90deg,#ff4d8d,#e91e8c);
-      color:white;
-      border:none;
-      border-radius:6px;
-      font-weight:bold;
-      cursor:pointer;
-      font-size:12px;
+    .data-table td {
+      padding: 13px 16px; border-bottom: 1px solid #F2EFE9;
+      color: ${C.mid}; vertical-align: middle;
     }
-    .qty-control{
-      display:flex;
-      align-items:center;
-      border:1px solid #ccc;
-      border-radius:6px;
-      overflow:hidden;
-      height:32px;
+    .data-table tbody tr:hover td { background: #FAFAF8; }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ── STATUS BADGES ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: .2px;
     }
-    .qty-btn{
-      width:36px;
-      height:100%;
-      background:white;
-      border:none;
-      font-size:16px;
-      color:#333;
-      cursor:pointer;
-      font-weight:bold;
-      flex-shrink:0;
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .badge-pending   { background: ${C.warningBg}; color: ${C.warning}; }
+    .badge-dot-pending   { background: ${C.warning}; }
+    .badge-processing{ background: ${C.infoBg};    color: ${C.info}; }
+    .badge-dot-processing{ background: ${C.info}; }
+    .badge-shipped   { background: #E0F2FE;         color: #0369A1; }
+    .badge-dot-shipped   { background: #0369A1; }
+    .badge-delivered { background: ${C.successBg}; color: ${C.success}; }
+    .badge-dot-delivered { background: ${C.success}; }
+    .badge-cancelled { background: ${C.dangerBg};  color: ${C.danger}; }
+    .badge-dot-cancelled { background: ${C.danger}; }
+
+    /* ── PRODUCT CARD ── */
+    .product-card {
+      background: ${C.white}; border: 1px solid ${C.border};
+      border-radius: 12px; overflow: hidden;
+      transition: box-shadow .2s, transform .2s;
+      display: flex; flex-direction: column; cursor: pointer;
     }
-    .qty-btn:first-child{ border-right:1px solid #ccc; }
-    .qty-btn:last-child{ border-left:1px solid #ccc; }
-    .qty-num{
-      flex:1;
-      text-align:center;
-      font-weight:bold;
-      font-size:13px;
-      color:#333;
+    .product-card:hover {
+      box-shadow: 0 8px 28px rgba(0,0,0,.09);
+      transform: translateY(-2px);
     }
-    .seller-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:3px;
-      font-size:10px;
-      color:#03ac0e;
-      font-weight:600;
+
+    /* ── SIDEBAR ── */
+    .store-sidebar {
+      width: 120px; background: ${C.white}; flex-shrink: 0;
+      border-right: 1px solid ${C.border};
+      padding: 12px 0; overflow-y: auto;
     }
-    .sidebar{
-      width:110px;
-      background:white;
-      border-right:1px solid #eee;
-      display:flex;
-      flex-direction:column;
-      padding:8px 0;
-      flex-shrink:0;
-      overflow-y:auto;
+    .cat-item {
+      display: flex; align-items: center;
+      padding: 10px 16px; cursor: pointer;
+      font-size: 12.5px; color: ${C.mid};
+      border-left: 3px solid transparent;
+      transition: all .15s; font-weight: 500;
     }
-    .cat-item{
-      display:flex;
-      align-items:center;
-      padding:11px 14px;
-      cursor:pointer;
-      font-size:12px;
-      color:#555;
-      border-left:3px solid transparent;
-      transition:0.15s;
-      line-height:1.3;
+    .cat-item:hover { background: #FFF8F8; color: ${C.primary}; }
+    .cat-item.active {
+      border-left-color: ${C.primary};
+      background: #FFF8F8; color: ${C.primary}; font-weight: 700;
     }
-    .cat-item:hover{ background:#fff0f7; color:#e91e8c; }
-    .cat-item.active{
-      border-left:3px solid #e91e8c;
-      background:#fff0f7;
-      color:#e91e8c;
-      font-weight:bold;
+
+    .submenu {
+      width: 0; overflow: hidden;
+      background: #FAFAF8; border-right: 1px solid ${C.border};
+      transition: width .2s ease; flex-shrink: 0;
     }
-    .submenu{
-      width:0;
-      overflow:hidden;
-      background:#fafafa;
-      border-right:1px solid #eee;
-      transition:width 0.25s ease;
-      flex-shrink:0;
+    .submenu.open { width: 148px; }
+    .submenu-inner { width: 148px; padding: 12px 0; }
+    .submenu-title {
+      font-size: 10px; font-weight: 700; color: ${C.primary};
+      padding: 6px 14px 8px; text-transform: uppercase;
+      letter-spacing: .8px; border-bottom: 1px solid ${C.border}; margin-bottom: 4px;
     }
-    .submenu.open{ width:140px; }
-    .submenu-inner{ width:140px; padding:8px 0; }
-    .submenu-title{
-      font-size:11px;
-      font-weight:bold;
-      color:#e91e8c;
-      padding:8px 14px 6px;
-      border-bottom:1px solid #f0e0e8;
-      margin-bottom:4px;
-      text-transform:uppercase;
-      letter-spacing:0.5px;
+    .sub-item {
+      padding: 9px 14px; font-size: 12px; color: ${C.mid};
+      cursor: pointer; border-left: 3px solid transparent;
+      transition: all .15s; font-weight: 500;
     }
-    .sub-item{
-      display:flex;
-      align-items:center;
-      padding:9px 14px;
-      font-size:12px;
-      color:#444;
-      cursor:pointer;
-      transition:0.15s;
-      border-left:3px solid transparent;
+    .sub-item:hover { background: #FFF8F8; color: ${C.primary}; }
+    .sub-item.active { border-left-color: ${C.primary}; background: #FFF8F8; color: ${C.primary}; font-weight: 700; }
+
+    /* ── ADMIN SIDEBAR ── */
+    .admin-sidebar {
+      width: 224px; background: ${C.white};
+      border-right: 1px solid ${C.border};
+      display: flex; flex-direction: column; flex-shrink: 0;
     }
-    .sub-item:hover{ background:#fff0f7; color:#e91e8c; }
-    .sub-item.active{
-      background:#fff0f7;
-      color:#e91e8c;
-      font-weight:bold;
-      border-left:3px solid #e91e8c;
+    .admin-nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 18px; cursor: pointer;
+      font-size: 13px; color: ${C.mid};
+      border-left: 3px solid transparent;
+      transition: all .15s; font-weight: 500; margin: 1px 0;
     }
-    .admin-row:hover{ background:#fafafa; }
+    .admin-nav-item:hover { background: #FFF8F8; color: ${C.primary}; }
+    .admin-nav-item.active {
+      border-left-color: ${C.primary};
+      background: #FFF8F8; color: ${C.primary}; font-weight: 700;
+    }
+    .nav-badge {
+      margin-left: auto; background: ${C.primary};
+      color: ${C.white}; font-size: 10px;
+      padding: 2px 7px; border-radius: 20px; font-weight: 700;
+    }
+
+    /* ── QTY ── */
+    .qty-control {
+      display: flex; align-items: center;
+      border: 1.5px solid ${C.border}; border-radius: 8px;
+      overflow: hidden; height: 34px;
+    }
+    .qty-btn {
+      width: 34px; height: 100%;
+      background: ${C.white}; border: none;
+      font-size: 16px; color: ${C.mid};
+      cursor: pointer; font-weight: 600; flex-shrink: 0; transition: .15s;
+    }
+    .qty-btn:hover { background: #FFF8F8; color: ${C.primary}; }
+    .qty-btn:first-child { border-right: 1.5px solid ${C.border}; }
+    .qty-btn:last-child  { border-left:  1.5px solid ${C.border}; }
+    .qty-num { flex: 1; text-align: center; font-weight: 700; font-size: 13px; }
+
+    .old-price { text-decoration: line-through; color: ${C.muted}; font-size: 11px; }
+
+    /* ── MISC ── */
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px; font-weight: 700; color: ${C.dark};
+    }
+    .divider { border: none; border-top: 1px solid ${C.border}; }
+
+    select.form-input { appearance: none; cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   `}</style>
 );
 
-const categories = [
-  { id:"cincin",  label:"Cincin",        subs:["Cincin Emas","Cincin Berlian","Cincin Perak","Cincin Couple","Cincin Tunangan"] },
-  { id:"kalung",  label:"Kalung",        subs:["Kalung Emas","Kalung Perak","Kalung Mutiara","Kalung Choker","Kalung Liontin"] },
-  { id:"gelang",  label:"Gelang",        subs:["Gelang Emas","Gelang Perak","Gelang Batu","Gelang Charm","Gelang Couple"] },
-  { id:"anting",  label:"Anting",        subs:["Anting Gantung","Anting Stud","Anting Hoop","Anting Klip","Anting Permata"] },
-  { id:"bros",    label:"Bros",          subs:["Bros Bunga","Bros Hewan","Bros Enamel","Bros Vintage","Bros Kristal"] },
-  { id:"set",     label:"Set Perhiasan", subs:["Set Pernikahan","Set Hadiah","Set Pengantin","Set Couple","Set Premium"] },
+const defaultCategories = [
+  { id:"cincin",  label:"Cincin",       subs:["Cincin Emas","Cincin Berlian","Cincin Perak","Cincin Couple","Cincin Tunangan"] },
+  { id:"kalung",  label:"Kalung",       subs:["Kalung Emas","Kalung Perak","Kalung Mutiara","Kalung Choker","Kalung Liontin"] },
+  { id:"gelang",  label:"Gelang",       subs:["Gelang Emas","Gelang Perak","Gelang Batu","Gelang Charm","Gelang Couple"] },
+  { id:"anting",  label:"Anting",       subs:["Anting Gantung","Anting Stud","Anting Hoop","Anting Klip","Anting Permata"] },
+  { id:"bros",    label:"Bros",         subs:["Bros Bunga","Bros Hewan","Bros Enamel","Bros Vintage","Bros Kristal"] },
+  { id:"set",     label:"Set Perhiasan",subs:["Set Pernikahan","Set Hadiah","Set Pengantin","Set Couple","Set Premium"] },
+];
+const defaultProducts = [
+  { id:1, cat:"cincin",price:720000,  oldPrice:850000,  discount:15,  img:null, rating:4.9, sold:"100rb+", name:"Cincin Emas 18K Rose Gold",    seller:FIXED_SELLER },
+  { id:2, cat:"kalung",price:325000,  oldPrice:null,    discount:null,img:null, rating:4.8, sold:"50rb+",  name:"Kalung Mutiara Putih Elegan", seller:FIXED_SELLER },
+  { id:3, cat:"anting",price:256000,  oldPrice:320000,  discount:20,  img:null, rating:5.0, sold:"500rb+", name:"Anting Berlian Swarovski",     seller:FIXED_SELLER },
+  { id:4, cat:"gelang",price:185000,  oldPrice:null,    discount:null,img:null, rating:4.7, sold:"200rb+", name:"Gelang Charm Silver 925",      seller:FIXED_SELLER },
+  { id:5, cat:"bros",  price:89000,   oldPrice:110000,  discount:19,  img:null, rating:4.9, sold:"30rb+",  name:"Bros Bunga Kristal Ungu",      seller:FIXED_SELLER },
+  { id:6, cat:"set",   price:1250000, oldPrice:1500000, discount:17,  img:null, rating:4.8, sold:"10rb+",  name:"Set Perhiasan Couple Emas",    seller:FIXED_SELLER },
+  { id:7, cat:"cincin",price:145000,  oldPrice:null,    discount:null,img:null, rating:4.6, sold:"80rb+",  name:"Cincin Perak Ukir Bunga",      seller:FIXED_SELLER },
+  { id:8, cat:"kalung",price:380000,  oldPrice:420000,  discount:10,  img:null, rating:4.9, sold:"150rb+", name:"Kalung Liontin Bintang Emas",  seller:FIXED_SELLER },
+];
+const defaultOrders = [
+  { id:"MH-00124",customer:"Dewi Anggraini", phone:"08123456789",address:"Jl. Melati No.12, Jakarta", items:[{name:"Cincin Emas 18K Rose Gold",qty:1,price:720000}], total:720000,  status:"delivered",  date:"2025-04-28"},
+  { id:"MH-00123",customer:"Rina Kusuma",    phone:"08198765432",address:"Jl. Mawar No.5, Bandung",   items:[{name:"Kalung Mutiara Putih Elegan",qty:2,price:325000}], total:650000,  status:"shipped",    date:"2025-04-27"},
+  { id:"MH-00122",customer:"Siti Rahayu",    phone:"08211223344",address:"Jl. Kenanga No.8, Surabaya",items:[{name:"Anting Berlian Swarovski",qty:1,price:256000},{name:"Bros Bunga Kristal Ungu",qty:1,price:89000}], total:345000,  status:"processing", date:"2025-04-27"},
+  { id:"MH-00121",customer:"Mega Lestari",   phone:"08567890123",address:"Jl. Dahlia No.3, Yogyakarta",items:[{name:"Set Perhiasan Couple Emas",qty:1,price:1250000}],total:1250000, status:"pending",    date:"2025-04-26"},
+  { id:"MH-00120",customer:"Yanti Setiawan", phone:"08312345678",address:"Jl. Teratai No.7, Medan",   items:[{name:"Gelang Charm Silver 925",qty:3,price:185000}],    total:555000,  status:"cancelled",  date:"2025-04-25"},
 ];
 
-const initialProducts = [
-  { id:1,  cat:"cincin", name:"Cincin Emas 18K Rose Gold",     price:720000,  oldPrice:850000,  discount:15,   img:null, rating:4.9, sold:"100rb+", seller:FIXED_SELLER },
-  { id:2,  cat:"kalung", name:"Kalung Mutiara Putih Elegan",   price:325000,  oldPrice:null,    discount:null, img:null, rating:4.8, sold:"50rb+",  seller:FIXED_SELLER },
-  { id:3,  cat:"anting", name:"Anting Berlian Swarovski",      price:256000,  oldPrice:320000,  discount:20,   img:null, rating:5.0, sold:"500rb+", seller:FIXED_SELLER },
-  { id:4,  cat:"gelang", name:"Gelang Charm Silver 925",       price:185000,  oldPrice:null,    discount:null, img:null, rating:4.7, sold:"200rb+", seller:FIXED_SELLER },
-  { id:5,  cat:"bros",   name:"Bros Bunga Kristal Ungu",       price:89000,   oldPrice:110000,  discount:19,   img:null, rating:4.9, sold:"30rb+",  seller:FIXED_SELLER },
-  { id:6,  cat:"set",    name:"Set Perhiasan Couple Emas",     price:1250000, oldPrice:1500000, discount:17,   img:null, rating:4.8, sold:"10rb+",  seller:FIXED_SELLER },
-  { id:7,  cat:"cincin", name:"Cincin Perak Ukir Bunga",       price:145000,  oldPrice:null,    discount:null, img:null, rating:4.6, sold:"80rb+",  seller:FIXED_SELLER },
-  { id:8,  cat:"kalung", name:"Kalung Liontin Bintang Emas",   price:380000,  oldPrice:420000,  discount:10,   img:null, rating:4.9, sold:"150rb+", seller:FIXED_SELLER },
-  { id:9,  cat:"anting", name:"Anting Hoop Gold Filled",       price:175000,  oldPrice:null,    discount:null, img:null, rating:4.7, sold:"60rb+",  seller:FIXED_SELLER },
-  { id:10, cat:"gelang", name:"Gelang Batu Opal Warna-warni",  price:220000,  oldPrice:260000,  discount:15,   img:null, rating:4.8, sold:"40rb+",  seller:FIXED_SELLER },
-  { id:11, cat:"bros",   name:"Bros Vintage Kelopak Enamel",   price:65000,   oldPrice:null,    discount:null, img:null, rating:4.5, sold:"25rb+",  seller:FIXED_SELLER },
-  { id:12, cat:"set",    name:"Set Pengantin Emas Putih",      price:2800000, oldPrice:3200000, discount:13,   img:null, rating:5.0, sold:"5rb+",   seller:FIXED_SELLER },
-];
+function loadLS(key, fallback){
+  if(typeof window === "undefined") return fallback;
+  try { const r=localStorage.getItem(key); return r?JSON.parse(r):fallback; } catch { return fallback; }
+}
+function saveLS(key,val){ try { localStorage.setItem(key,JSON.stringify(val)); } catch{} }
 
-function LogoutConfirmModal({ onConfirm, onCancel }) {
+function ModalOverlay({ children, onClose }) {
   return (
-    <div style={{
-      position:"fixed", top:0, left:0,
-      width:"100%", height:"100%",
-      background:"rgba(0,0,0,0.45)",
-      display:"flex", justifyContent:"center", alignItems:"center",
-      zIndex:1000
-    }}>
-      <div style={{
-        background:"white", borderRadius:16,
-        padding:"32px 28px", width:320,
-        textAlign:"center",
-        boxShadow:"0 8px 32px rgba(0,0,0,0.18)"
-      }}>
-        <h3 style={{ margin:"0 0 8px", fontSize:17, color:"#1a1a1a" }}>
-          Yakin ingin keluar?
-        </h3>
-        <p style={{ margin:"0 0 24px", fontSize:13, color:"#888", lineHeight:1.5 }}>
-          Kamu akan keluar dari akun MeiHua Official.
-        </p>
-        <div style={{ display:"flex", gap:10 }}>
-          <button
-            onClick={onCancel}
-            style={{
-              flex:1, padding:"11px",
-              borderRadius:10, border:"1px solid #ddd",
-              background:"white", color:"#555",
-              fontSize:14, fontWeight:"bold",
-              cursor:"pointer"
-            }}
-          >
-            Tidak
-          </button>
-          <button
-            onClick={onConfirm}
-            style={{
-              flex:1, padding:"11px",
-              borderRadius:10, border:"none",
-              background:"#e91e8c", color:"white",
-              fontSize:14, fontWeight:"bold",
-              cursor:"pointer",
-              boxShadow:"0 2px 8px rgba(233,30,140,0.3)"
-            }}
-          >
-            Ya
-          </button>
-        </div>
-      </div>
+    <div
+      onClick={onClose}
+      style={{position:"fixed",inset:0,background:"rgba(10,5,15,.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20}}
+    >
+      <div onClick={e=>e.stopPropagation()}>{children}</div>
     </div>
   );
 }
 
-function DeleteConfirmModal({ productName, onConfirm, onCancel }) {
+function ConfirmModal({ title, desc, onConfirm, onCancel, danger }) {
   return (
-    <div style={{
-      position:"fixed", top:0, left:0,
-      width:"100%", height:"100%",
-      background:"rgba(0,0,0,0.45)",
-      display:"flex", justifyContent:"center", alignItems:"center",
-      zIndex:1000
-    }}>
-      <div style={{
-        background:"white", borderRadius:16,
-        padding:"32px 28px", width:320,
-        textAlign:"center",
-        boxShadow:"0 8px 32px rgba(0,0,0,0.18)"
-      }}>
-        <h3 style={{ margin:"0 0 8px", fontSize:17, color:"#1a1a1a" }}>
-          Yakin ingin menghapus?
-        </h3>
-        <p style={{ margin:"0 0 24px", fontSize:13, color:"#888", lineHeight:1.5 }}>
-          Produk <strong style={{ color:"#333" }}>{productName}</strong> akan dihapus secara permanen.
-        </p>
-        <div style={{ display:"flex", gap:10 }}>
-          <button
-            onClick={onCancel}
-            style={{
-              flex:1, padding:"11px",
-              borderRadius:10, border:"1px solid #ddd",
-              background:"white", color:"#555",
-              fontSize:14, fontWeight:"bold",
-              cursor:"pointer"
-            }}
-          >
-            Tidak
-          </button>
+    <ModalOverlay onClose={onCancel}>
+      <div style={{background:C.white,borderRadius:16,padding:"32px 28px",width:360,textAlign:"center",boxShadow:"0 24px 64px rgba(0,0,0,.18)"}}>
+        <div style={{width:52,height:52,borderRadius:"50%",background:danger?C.dangerBg:C.goldLight,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
+          {danger
+            ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.danger} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          }
+        </div>
+        <h3 style={{margin:"0 0 8px",fontSize:17,color:C.dark,fontWeight:700,fontFamily:"'Cormorant Garamond',serif"}}>{title}</h3>
+        <p style={{margin:"0 0 24px",fontSize:13,color:C.muted,lineHeight:1.6}}>{desc}</p>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onCancel} className="btn-outline" style={{flex:1,justifyContent:"center",padding:11}}>Batal</button>
           <button
             onClick={onConfirm}
-            style={{
-              flex:1, padding:"11px",
-              borderRadius:10, border:"none",
-              background:"#ff4d4f", color:"white",
-              fontSize:14, fontWeight:"bold",
-              cursor:"pointer",
-              boxShadow:"0 2px 8px rgba(255,77,79,0.3)"
-            }}
+            style={{flex:1,padding:11,borderRadius:8,border:"none",background:danger?C.danger:C.primary,color:C.white,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}
           >
-            Ya
+            {danger ? "Ya, Hapus" : "Konfirmasi"}
           </button>
         </div>
       </div>
+    </ModalOverlay>
+  );
+}
+
+const STATUS_LABELS = {pending:"Menunggu",processing:"Diproses",shipped:"Dikirim",delivered:"Selesai",cancelled:"Dibatalkan"};
+function StatusBadge({ status }) {
+  return (
+    <span className={`badge badge-${status}`}>
+      <span className={`badge-dot badge-dot-${status}`}/>
+      {STATUS_LABELS[status]}
+    </span>
+  );
+}
+
+function OrderDetailModal({ order, onClose, onStatusChange }) {
+  const statusOpts = ["pending","processing","shipped","delivered","cancelled"];
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div style={{background:C.white,borderRadius:16,width:480,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(0,0,0,.18)"}}>
+        {/* Header */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"20px 24px",borderBottom:`1px solid ${C.border}`}}>
+          <div>
+            <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".7px",margin:"0 0 4px"}}>Detail Pesanan</p>
+            <h3 style={{margin:0,fontSize:19,color:C.dark,fontWeight:700,fontFamily:"'Cormorant Garamond',serif"}}>#{order.id}</h3>
+          </div>
+          <button onClick={onClose} style={{background:"#F5F3F0",border:"none",borderRadius:8,width:34,height:34,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:C.mid}}>
+            <Icon.close/>
+          </button>
+        </div>
+
+        <div style={{padding:24}}>
+          {/* Customer info */}
+          <div style={{background:C.surface,borderRadius:10,padding:16,marginBottom:16}}>
+            <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Informasi Pelanggan</p>
+            <p style={{fontWeight:700,color:C.dark,margin:"0 0 5px",fontSize:14}}>{order.customer}</p>
+            <p style={{fontSize:12,color:C.muted,margin:"0 0 3px"}}>Telp: {order.phone}</p>
+            <p style={{fontSize:12,color:C.muted,margin:0}}>Alamat: {order.address}</p>
+          </div>
+
+          {/* Items */}
+          <div style={{marginBottom:16}}>
+            <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Item Pesanan</p>
+            {order.items.map((it,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:i<order.items.length-1?`1px solid ${C.border}`:"none"}}>
+                <div>
+                  <p style={{fontSize:13,fontWeight:600,color:C.dark,margin:"0 0 2px"}}>{it.name}</p>
+                  <p style={{fontSize:11,color:C.muted,margin:0}}>x{it.qty} × {fmt(it.price)}</p>
+                </div>
+                <p style={{fontWeight:700,color:C.dark,margin:0,flexShrink:0}}>{fmt(it.qty*it.price)}</p>
+              </div>
+            ))}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:`2px solid ${C.border}`}}>
+              <span style={{fontWeight:700,fontSize:14,color:C.dark}}>Total</span>
+              <span style={{fontWeight:700,fontSize:16,color:C.primary}}>{fmt(order.total)}</span>
+            </div>
+          </div>
+
+          {/* Status change */}
+          <div>
+            <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Ubah Status</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+              {statusOpts.map(s=>(
+                <button key={s} onClick={()=>onStatusChange(order.id,s)} style={{
+                  padding:"6px 14px",borderRadius:20,
+                  border:`1.5px solid ${order.status===s?C.primary:C.border}`,
+                  background:order.status===s?C.primary:C.white,
+                  color:order.status===s?C.white:C.mid,
+                  fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:".15s"
+                }}>
+                  {STATUS_LABELS[s]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </ModalOverlay>
+  );
+}
+
+function StatCard({ label, value, sub, color = C.primary }) {
+  return (
+    <div className="card" style={{padding:20}}>
+      <p style={{fontSize:22,fontWeight:700,color,margin:"0 0 4px",fontFamily:"'Cormorant Garamond',serif"}}>{value}</p>
+      <p style={{fontSize:12,fontWeight:600,color:C.dark,margin:"0 0 2px"}}>{label}</p>
+      {sub && <p style={{fontSize:11,color:C.muted,margin:0}}>{sub}</p>}
     </div>
   );
 }
 
-function AdminPanel({ products, setProducts, user, onClose }) {
-  const [tab, setTab] = useState("list");
+function OrdersPanel({ orders, setOrders }) {
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const counts = {
+    all:orders.length,
+    pending:orders.filter(o=>o.status==="pending").length,
+    processing:orders.filter(o=>o.status==="processing").length,
+    shipped:orders.filter(o=>o.status==="shipped").length,
+    delivered:orders.filter(o=>o.status==="delivered").length,
+    cancelled:orders.filter(o=>o.status==="cancelled").length,
+  };
+  const filtered = orders.filter(o=>
+    (filter==="all"||o.status===filter) &&
+    (o.id.toLowerCase().includes(search.toLowerCase())||o.customer.toLowerCase().includes(search.toLowerCase()))
+  );
+  const revenue = orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+o.total,0);
+
+  const changeStatus = (id, status) => {
+    setOrders(prev=>prev.map(o=>o.id===id?{...o,status}:o));
+    setSelectedOrder(prev=>prev?{...prev,status}:prev);
+  };
+
+  const filterBtns = [["all","Semua"],["pending","Menunggu"],["processing","Diproses"],["shipped","Dikirim"],["delivered","Selesai"],["cancelled","Dibatalkan"]];
+
+  return (
+    <div style={{padding:24,flex:1,overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+        <div>
+          <h2 className="section-title">Pesanan Masuk</h2>
+          <p style={{color:C.muted,fontSize:12,marginTop:3}}>{orders.length} total pesanan</p>
+        </div>
+        <div style={{position:"relative"}}>
+          <span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:C.muted,pointerEvents:"none"}}><Icon.search/></span>
+          <input className="form-input" placeholder="Cari ID atau nama..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:240,paddingLeft:34}}/>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+        <StatCard label="Total Pendapatan" value={fmt(revenue)} sub="Pesanan selesai" color={C.primary}/>
+        <StatCard label="Pesanan Baru" value={counts.pending} sub="Menunggu konfirmasi" color={C.warning}/>
+        <StatCard label="Dalam Proses" value={counts.processing+counts.shipped} sub="Diproses & dikirim" color={C.info}/>
+        <StatCard label="Pesanan Selesai" value={counts.delivered} sub="Berhasil terkirim" color={C.success}/>
+      </div>
+
+      {/* Filter chips */}
+      <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+        {filterBtns.map(([k,v])=>(
+          <button key={k} onClick={()=>setFilter(k)} style={{
+            padding:"6px 14px",borderRadius:20,
+            border:`1.5px solid ${filter===k?C.primary:C.border}`,
+            background:filter===k?C.primary:C.white,
+            color:filter===k?C.white:C.mid,
+            fontSize:12,fontWeight:600,cursor:"pointer",
+            fontFamily:"'DM Sans',sans-serif",transition:".15s",
+            display:"inline-flex",alignItems:"center",gap:5
+          }}>
+            {v}
+            {counts[k]>0&&<span style={{background:filter===k?"rgba(255,255,255,.25)":"#F3F0EC",borderRadius:10,padding:"0 5px",fontSize:11}}>{counts[k]}</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="card" style={{overflow:"hidden"}}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>ID Pesanan</th><th>Pelanggan</th><th>Produk</th>
+              <th>Total</th><th>Tanggal</th><th>Status</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length===0 && (
+              <tr><td colSpan={7} style={{textAlign:"center",padding:48,color:C.muted}}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.border} strokeWidth="1.5" style={{display:"block",margin:"0 auto 10px"}}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Tidak ada pesanan
+              </td></tr>
+            )}
+            {filtered.map(o=>(
+              <tr key={o.id}>
+                <td><span style={{fontWeight:700,color:C.primary,fontSize:12}}>#{o.id}</span></td>
+                <td>
+                  <p style={{fontWeight:600,color:C.dark,margin:"0 0 2px",fontSize:13}}>{o.customer}</p>
+                  <p style={{fontSize:11,color:C.muted,margin:0}}>{o.phone}</p>
+                </td>
+                <td style={{fontSize:12,color:C.muted,maxWidth:180}}>{o.items.map(it=>`${it.name} (×${it.qty})`).join(", ")}</td>
+                <td><span style={{fontWeight:700,color:C.dark}}>{fmt(o.total)}</span></td>
+                <td style={{fontSize:11,color:C.muted,whiteSpace:"nowrap"}}>{o.date}</td>
+                <td><StatusBadge status={o.status}/></td>
+                <td><button className="btn-edit" onClick={()=>setSelectedOrder(o)}>Detail</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedOrder && (
+        <OrderDetailModal order={selectedOrder} onClose={()=>setSelectedOrder(null)} onStatusChange={changeStatus}/>
+      )}
+    </div>
+  );
+}
+
+function ProductsPanel({ products, setProducts, categories }) {
+  const [view, setView] = useState("list");
   const [editTarget, setEditTarget] = useState(null);
-  const [previewImg, setPreviewImg] = useState(null);
-  const imgInputRef = React.useRef();
-  const [form, setForm] = useState({
-    name:"", cat:"cincin", price:"", oldPrice:"",
-    discount:"", rating:"4.9", sold:""
-  });
-
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [previewImg, setPreviewImg] = useState(null);
+  const imgRef = useRef();
+  const emptyForm = { name:"", cat:categories[0]?.id||"cincin", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" };
+  const [form, setForm] = useState(emptyForm);
 
-  const inputS = {
-    width:"100%", 
-    padding:"10px 14px", 
-    borderRadius:8,
-    border:"1px solid #e0e0e0", 
-    fontSize:13,
-    boxSizing:"border-box", 
-    display:"block", 
-    outline:"none",
-  };
-  const labelS = {
-    fontSize:12, color:"#666",
-    fontWeight:"600", marginBottom:5, display:"block"
-  };
-
-  const resetForm = () => {
-    setForm({ name:"", cat:"cincin", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" });
-    setPreviewImg(null);
-    setEditTarget(null);
-  };
-
+  const resetForm = () => { setForm(emptyForm); setPreviewImg(null); setEditTarget(null); };
   const openEdit = (p) => {
     setEditTarget(p);
-    setForm({
-      name:p.name, cat:p.cat,
-      price:p.price, oldPrice:p.oldPrice || "",
-      discount:p.discount || "",
-      rating:p.rating, sold:p.sold
-    });
-    setPreviewImg(p.img);
-    setTab("edit");
+    setForm({name:p.name,cat:p.cat,price:p.price,oldPrice:p.oldPrice||"",discount:p.discount||"",rating:p.rating,sold:p.sold});
+    setPreviewImg(p.img); setView("edit");
   };
-
-  const handleDelete = (p) => {
-    setDeleteTarget(p);
-  };
-
-  const confirmDelete = () => {
-    setProducts(prev => prev.filter(p => p.id !== deleteTarget.id));
-    setDeleteTarget(null);
-  };
-
-  const cancelDelete = () => {
-    setDeleteTarget(null);
-  };
-
   const handleSave = () => {
-    if (!form.name || !form.price) {
-      alert("Nama dan harga wajib diisi!"); return;
-    }
-    if (tab === "add") {
-      setProducts(prev => [...prev, {
-        id: Date.now(),
-        cat: form.cat, name: form.name,
-        price: Number(form.price),
-        oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
-        discount: form.discount ? Number(form.discount) : null,
-        img: previewImg,
-        rating: Number(form.rating),
-        sold: form.sold, seller: FIXED_SELLER
-      }]);
-    } else {
-      setProducts(prev => prev.map(p =>
-        p.id === editTarget.id ? {
-          ...p, name:form.name, cat:form.cat,
-          price:Number(form.price),
-          oldPrice:form.oldPrice ? Number(form.oldPrice) : null,
-          discount:form.discount ? Number(form.discount) : null,
-          img:previewImg, rating:Number(form.rating),
-          sold:form.sold, seller: FIXED_SELLER
-        } : p
-      ));
-    }
-    setTab("list"); resetForm();
+    if(!form.name||!form.price){ alert("Nama dan harga wajib diisi!"); return; }
+    const data = { cat:form.cat, name:form.name, price:Number(form.price), oldPrice:form.oldPrice?Number(form.oldPrice):null, discount:form.discount?Number(form.discount):null, img:previewImg, rating:Number(form.rating), sold:form.sold, seller:FIXED_SELLER };
+    if(view==="add") setProducts(prev=>[...prev,{id:Date.now(),...data}]);
+    else setProducts(prev=>prev.map(p=>p.id===editTarget.id?{...p,...data}:p));
+    setView("list"); resetForm();
   };
 
-  const Field = ({ label, children }) => (
-    <div style={{ marginBottom:14 }}>
-      <label style={labelS}>{label}</label>
-      {children}
-    </div>
-  );
-
-  if (tab === "add" || tab === "edit") {
+  if(view==="add"||view==="edit") {
     return (
-      <div style={{
-        position:"fixed", top:0, left:0,
-        width:"100%", height:"100%",
-        background:"#f4f6f8", zIndex:200,
-        display:"flex", flexDirection:"column", overflow:"hidden"
-      }}>
-        <div style={{
-          background:"white", borderBottom:"1px solid #eee",
-          padding:"14px 28px",
-          display:"flex", justifyContent:"space-between", alignItems:"center",
-          flexShrink:0
-        }}>
-          <div>
-            <h2 style={{ margin:0, fontSize:18, color:"#1a1a1a", fontWeight:700 }}>
-              {tab === "add" ? "Tambah Produk Baru" : "Edit Produk"}
-            </h2>
-            <p style={{ margin:"2px 0 0", fontSize:12, color:"#aaa" }}>
-              {tab === "edit" && editTarget?.name}
-            </p>
-          </div>
-          <button
-            onClick={() => { setTab("list"); resetForm(); }}
-            style={{
-              background:"white", border:"1px solid #ddd",
-              borderRadius:8, padding:"9px 20px",
-              fontSize:13, cursor:"pointer", color:"#555"
-            }}
-          >
-            Batal
-          </button>
+      <div style={{flex:1,overflowY:"auto"}}>
+        <div style={{background:C.white,borderBottom:`1px solid ${C.border}`,padding:"16px 24px"}}>
+          <h2 className="section-title">{view==="add"?"Tambah Produk Baru":"Edit Produk"}</h2>
+          {view==="edit"&&<p style={{color:C.muted,fontSize:12,marginTop:3}}>{editTarget?.name}</p>}
         </div>
-
-        <div style={{ flex:1, overflowY:"auto", padding:"28px", display:"flex", justifyContent:"center" }}>
-          <div style={{ width:"100%", maxWidth:900 }}>
-            <div style={{ display:"grid", gridTemplateColumns:"200px 1fr", gap:28, alignItems:"start" }}>
-
-              <div>
-                <label style={labelS}>Foto Produk</label>
-                <div
-                  onClick={() => imgInputRef.current.click()}
-                  style={{
-                    width:"100%", aspectRatio:"1",
-                    borderRadius:12, border:"2px dashed #e0e0e0",
-                    background:"#fafafa",
-                    display:"flex", flexDirection:"column",
-                    alignItems:"center", justifyContent:"center",
-                    cursor:"pointer", overflow:"hidden"
-                  }}
-                >
-                  {previewImg
-                    ? <img src={previewImg} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt="" />
-                    : <>
-                        <span style={{ fontSize:36, color:"#ccc" }}>📷</span>
-                        <span style={{ fontSize:12, color:"#bbb", marginTop:8 }}>Klik untuk upload</span>
-                      </>
-                  }
-                </div>
-                <input
-                  ref={imgInputRef} type="file" accept="image/*"
-                  style={{ display:"none" }}
-                  onChange={e => {
-                    const f = e.target.files[0];
-                    if (f) setPreviewImg(URL.createObjectURL(f));
-                  }}
-                />
+        <div style={{padding:28,maxWidth:900,margin:"0 auto"}}>
+          <div style={{display:"grid",gridTemplateColumns:"200px 1fr",gap:28,alignItems:"start"}}>
+            {/* Image upload */}
+            <div>
+              <label className="form-label" style={{marginBottom:8,display:"block"}}>Foto Produk</label>
+              <div onClick={()=>imgRef.current.click()} style={{aspectRatio:"1",borderRadius:12,border:`2px dashed ${C.border}`,background:C.surface,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",overflow:"hidden",transition:".15s"}}>
+                {previewImg
+                  ? <img src={previewImg} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/>
+                  : <><Icon.photo/><span style={{fontSize:11,color:C.muted,marginTop:10}}>Klik untuk upload</span></>
+                }
               </div>
+              <input ref={imgRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f)setPreviewImg(URL.createObjectURL(f));}}/>
+            </div>
 
-              <div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-                  <div style={{ gridColumn:"1/-1" }}>
-                    <Field label="Nama Produk *">
-                      <input style={inputS} placeholder="cth: Cincin Emas 18K Rose Gold"
-                        value={form.name}
-                        onChange={e => setForm({ ...form, name:e.target.value })} />
-                    </Field>
-                  </div>
-                  <Field label="Kategori">
-                    <div style={{ position:"relative" }}>
-                      <select
-                        style={{
-                          ...inputS,
-                          appearance:"none",
-                          WebkitAppearance:"none",
-                          MozAppearance:"none",
-                          paddingRight:28,
-                          cursor:"pointer",
-                          background:"white",
-                        }}
-                        value={form.cat}
-                        onChange={e => setForm({ ...form, cat:e.target.value })}
-                      >
-                        {categories.map(c => (
-                          <option key={c.id} value={c.id}>{c.label}</option>
-                        ))}
-                      </select>
-                      <span style={{
-                        position:"absolute",
-                        right:10,
-                        top:"50%",
-                        transform:"translateY(-50%)",
-                        pointerEvents:"none",
-                        color:"#aaa",
-                        fontSize:12,
-                        lineHeight:1,
-                      }}>▾</span>
-                    </div>
-                  </Field>
-
-                  <Field label="Nama Toko">
-                    <div style={{ position:"relative" }}>
-                      <input
-                        value={FIXED_SELLER}
-                        readOnly
-                        tabIndex={-1}
-                        style={{
-                          ...inputS,
-                          background:"#f5f5f5",
-                          color:"#888",
-                          cursor:"not-allowed",
-                          border:"1px solid #e8e8e8"
-                        }}
-                      />
-                    </div>
-                  </Field>
-
-                  <Field label="Harga Jual *">
-                    <input style={inputS} type="number" placeholder="cth: 150000"
-                      value={form.price}
-                      onChange={e => setForm({ ...form, price:e.target.value })} />
-                  </Field>
-                  <Field label="Harga Asli (opsional)">
-                    <input style={inputS} type="number" placeholder="cth: 200000"
-                      value={form.oldPrice}
-                      onChange={e => setForm({ ...form, oldPrice:e.target.value })} />
-                  </Field>
-                  <Field label="Diskon % (opsional)">
-                    <input style={inputS} type="number" placeholder="cth: 20"
-                      value={form.discount}
-                      onChange={e => setForm({ ...form, discount:e.target.value })} />
-                  </Field>
+            {/* Form fields */}
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div className="form-group">
+                <label className="form-label">Nama Produk *</label>
+                <input className="form-input" placeholder="cth: Cincin Emas 18K Rose Gold" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <div className="form-group">
+                  <label className="form-label">Kategori</label>
+                  <select className="form-input" value={form.cat} onChange={e=>setForm({...form,cat:e.target.value})}>
+                    {categories.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+                  </select>
                 </div>
-
-                <button onClick={handleSave} style={{
-                  marginTop:8, width:"100%", padding:14,
-                  background:"#e91e8c", color:"white",
-                  border:"none", borderRadius:10,
-                  fontWeight:"bold", fontSize:15, cursor:"pointer",
-                  boxShadow:"0 2px 8px rgba(233,30,140,0.3)"
-                }}>
-                  {tab === "add" ? "Simpan Produk" : "Update Produk"}
+                <div className="form-group">
+                  <label className="form-label">Nama Toko</label>
+                  <input className="form-input" value={FIXED_SELLER} readOnly style={{background:"#F7F5F2",color:C.muted,cursor:"not-allowed"}}/>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Harga Jual (Rp) *</label>
+                  <input className="form-input" type="number" placeholder="150000" value={form.price} onChange={e=>setForm({...form,price:e.target.value})}/>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Harga Asli (Rp)</label>
+                  <input className="form-input" type="number" placeholder="200000" value={form.oldPrice} onChange={e=>setForm({...form,oldPrice:e.target.value})}/>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Diskon (%)</label>
+                  <input className="form-input" type="number" placeholder="20" value={form.discount} onChange={e=>setForm({...form,discount:e.target.value})}/>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Jumlah Terjual</label>
+                  <input className="form-input" placeholder="100rb+" value={form.sold} onChange={e=>setForm({...form,sold:e.target.value})}/>
+                </div>
+              </div>
+              {/* Action buttons side by side */}
+              <div style={{display:"flex",gap:10,marginTop:4}}>
+                <button onClick={()=>{setView("list");resetForm();}} className="btn-outline" style={{flex:"0 0 auto",padding:"11px 20px"}}>Batal</button>
+                <button onClick={handleSave} className="btn-primary" style={{flex:1,justifyContent:"center",padding:11}}>
+                  {view==="add"?"Simpan Produk":"Update Produk"}
                 </button>
               </div>
             </div>
@@ -586,228 +630,431 @@ function AdminPanel({ products, setProducts, user, onClose }) {
   }
 
   return (
-    <div style={{ height:"100%", display:"flex", flexDirection:"column", overflow:"hidden" }}>
-      <div style={{
-        background:"white", borderBottom:"1px solid #eee",
-        padding:"14px 20px",
-        display:"flex", justifyContent:"space-between", alignItems:"center",
-        flexShrink:0
-      }}>
+    <div style={{padding:24,flex:1,overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
         <div>
-          <h2 style={{ margin:0, fontSize:18, color:"#1a1a1a", fontWeight:700 }}>Admin</h2>
-          <p style={{ margin:"3px 0 0", fontSize:12, color:"#888" }}>
-            Selamat datang, <strong>{user}</strong>
-          </p>
+          <h2 className="section-title">Manajemen Produk</h2>
+          <p style={{color:C.muted,fontSize:12,marginTop:3}}>{products.length} produk terdaftar</p>
         </div>
-        <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-          <button onClick={() => { resetForm(); setTab("add"); }} style={{
-            background:"#e91e8c", color:"white",
-            border:"none", borderRadius:8,
-            padding:"9px 18px", fontSize:13,
-            cursor:"pointer", fontWeight:"bold",
-            boxShadow:"0 2px 8px rgba(233,30,140,0.3)"
-          }}>
-            + Tambah Produk
-          </button>
-          <button onClick={onClose} style={{
-            display:"flex", alignItems:"center", gap:6,
-            background:"#fff0f7", color:"#e91e8c",
-            border:"1px solid #f9a8d4",
-            borderRadius:8, padding:"9px 18px",
-            fontSize:13, cursor:"pointer", fontWeight:"bold"
-          }}>
-            Kunjungi Toko
-          </button>
-        </div>
+        <button onClick={()=>{resetForm();setView("add");}} className="btn-primary"><Icon.plus/> Tambah Produk</button>
       </div>
 
-      <div style={{ flex:1, overflowY:"auto", padding:20, background:"#f4f6f8" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:18 }}>
-          {[
-            { label:"Total Produk", value:products.length,                       color:"#e91e8c" },
-            { label:"Ada Diskon",   value:products.filter(p=>p.discount).length, color:"#ff4d4f" },
-            { label:"Ada Foto",     value:products.filter(p=>p.img).length,      color:"#03ac0e" },
-            { label:"Kategori",     value:categories.length,                     color:"#1890ff" },
-          ].map((s, i) => (
-            <div key={i} style={{
-              background:"white", borderRadius:10,
-              padding:"14px 18px",
-              boxShadow:"0 1px 4px rgba(0,0,0,0.06)"
-            }}>
-              <div style={{ fontSize:22, fontWeight:"bold", color:s.color }}>{s.value}</div>
-              <div style={{ fontSize:12, color:"#888", marginTop:2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+        <StatCard label="Total Produk" value={products.length} color={C.primary}/>
+        <StatCard label="Ada Diskon" value={products.filter(p=>p.discount).length} color={C.danger}/>
+        <StatCard label="Ada Foto" value={products.filter(p=>p.img).length} color={C.success}/>
+        <StatCard label="Kategori" value={categories.length} color={C.info}/>
+      </div>
 
-        <div style={{ background:"white", borderRadius:10, overflow:"hidden", boxShadow:"0 1px 4px rgba(0,0,0,0.07)" }}>
-          <div style={{
-            display:"grid",
-            gridTemplateColumns:"56px 1fr 130px 110px 70px 130px",
-            padding:"11px 16px",
-            background:"#f9f9f9", borderBottom:"1px solid #eee",
-            fontSize:11, fontWeight:"700",
-            color:"#999", textTransform:"uppercase", letterSpacing:"0.5px"
-          }}>
-            <span>Foto</span>
-            <span>Produk</span>
-            <span>Harga</span>
-            <span>Kategori</span>
-            <span>Rating</span>
-            <span>Aksi</span>
-          </div>
-
-          {products.length === 0 && (
-            <div style={{ textAlign:"center", padding:48, color:"#bbb", fontSize:14 }}>
-              <div style={{ fontSize:40, marginBottom:10 }}>📦</div>
-              Belum ada produk. Klik "+ Tambah Produk" untuk mulai.
-            </div>
-          )}
-
-          {products.map((p, i) => (
-            <div key={p.id} className="admin-row" style={{
-              display:"grid",
-              gridTemplateColumns:"56px 1fr 130px 110px 70px 130px",
-              padding:"12px 16px", alignItems:"center",
-              borderBottom: i < products.length - 1 ? "1px solid #f5f5f5" : "none",
-              transition:"0.15s"
-            }}>
-              <div style={{
-                width:42, height:42, borderRadius:8,
-                background:"#f3eaf0", overflow:"hidden",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                flexShrink:0
-              }}>
-                {p.img
-                  ? <img src={p.img} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt="" />
-                  : <span style={{ fontSize:18, color:"#ccc" }}>📷</span>
-                }
-              </div>
-
-              <div style={{ paddingRight:10 }}>
-                <div style={{
-                  fontWeight:"600", color:"#222", fontSize:13, marginBottom:2,
-                  whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:200
-                }}>
-                  {p.name}
-                </div>
-                <div style={{ fontSize:11, color:"#03ac0e" }}>✔ {p.seller}</div>
-              </div>
-
-              <div>
-                <div style={{ color:"#e91e8c", fontWeight:"bold", fontSize:13 }}>
-                  Rp {p.price.toLocaleString("id-ID")}
-                </div>
-                {p.discount && (
-                  <div style={{
-                    fontSize:10, color:"#ff4d4f", background:"#fff2f0",
-                    display:"inline-block", padding:"1px 5px", borderRadius:4, marginTop:2
-                  }}>
-                    Diskon {p.discount}%
+      <div className="card" style={{overflow:"hidden"}}>
+        <table className="data-table">
+          <thead><tr><th style={{width:52}}>Foto</th><th>Nama Produk</th><th>Harga</th><th>Kategori</th><th>Rating</th><th>Aksi</th></tr></thead>
+          <tbody>
+            {products.length===0 && (
+              <tr><td colSpan={6} style={{textAlign:"center",padding:48,color:C.muted}}>
+                <Icon.product/>
+                <p style={{marginTop:10,fontSize:13}}>Belum ada produk.</p>
+              </td></tr>
+            )}
+            {products.map(p=>(
+              <tr key={p.id}>
+                <td>
+                  <div style={{width:42,height:42,borderRadius:9,background:C.surface,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${C.border}`}}>
+                    {p.img ? <img src={p.img} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/> : <span style={{color:C.border}}><Icon.photo/></span>}
                   </div>
-                )}
-              </div>
-
-              <div>
-                <span style={{
-                  background:"#fff0f7", color:"#e91e8c",
-                  padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:"600"
-                }}>
-                  {categories.find(c => c.id === p.cat)?.label || p.cat}
-                </span>
-              </div>
-
-              <div style={{ fontSize:12, color:"#555" }}>⭐ {p.rating}</div>
-
-              <div style={{ display:"flex", gap:6 }}>
-                <button onClick={() => openEdit(p)} style={{
-                  padding:"5px 14px", borderRadius:6,
-                  border:"1px solid #e91e8c", background:"white",
-                  color:"#e91e8c", fontSize:12, cursor:"pointer", fontWeight:"600"
-                }}>
-                  Edit
-                </button>
-                {/* ── DIUBAH: kirim objek p, bukan hanya id ── */}
-                <button onClick={() => handleDelete(p)} style={{
-                  padding:"5px 12px", borderRadius:6,
-                  border:"1px solid #ffccc7", background:"#fff2f0",
-                  color:"#ff4d4f", fontSize:12, cursor:"pointer", fontWeight:"600"
-                }}>
-                  Hapus
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+                </td>
+                <td>
+                  <p style={{fontWeight:600,color:C.dark,margin:"0 0 3px",fontSize:13}}>{p.name}</p>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:11,color:C.success,fontWeight:600}}>
+                    <Icon.verified/> {p.seller}
+                  </span>
+                </td>
+                <td>
+                  <p style={{fontWeight:700,color:C.primary,margin:"0 0 2px",fontSize:13}}>{fmt(p.price)}</p>
+                  {p.discount && <span style={{fontSize:10.5,color:C.danger,background:C.dangerBg,padding:"1px 7px",borderRadius:4,fontWeight:700}}>−{p.discount}%</span>}
+                </td>
+                <td>
+                  <span style={{background:C.goldLight,color:C.gold,padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:700}}>
+                    {categories.find(c=>c.id===p.cat)?.label||p.cat}
+                  </span>
+                </td>
+                <td>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontSize:12,color:C.dark}}>
+                    <Icon.star/> {p.rating}
+                  </span>
+                </td>
+                <td>
+                  <div style={{display:"flex",gap:6}}>
+                    <button onClick={()=>openEdit(p)} className="btn-edit"><Icon.edit/> Edit</button>
+                    <button onClick={()=>setDeleteTarget(p)} className="btn-danger"><Icon.trash/> Hapus</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      {/* ── BARU: render modal hapus di dalam AdminPanel ── */}
       {deleteTarget && (
-        <DeleteConfirmModal
-          productName={deleteTarget.name}
-          onConfirm={confirmDelete}
-          onCancel={cancelDelete}
+        <ConfirmModal title="Hapus produk ini?" desc={`"${deleteTarget.name}" akan dihapus secara permanen dan tidak bisa dikembalikan.`} danger
+          onConfirm={()=>{setProducts(prev=>prev.filter(p=>p.id!==deleteTarget.id));setDeleteTarget(null);}}
+          onCancel={()=>setDeleteTarget(null)}
         />
       )}
     </div>
   );
 }
 
-function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout }) {
+function CategoriesPanel({ categories, setCategories }) {
+  const [view, setView] = useState("list");
+  const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [form, setForm] = useState({ label:"", subsRaw:"" });
+  const [err, setErr] = useState("");
+
+  const openEdit = (cat) => { setEditTarget(cat); setForm({label:cat.label,subsRaw:cat.subs.join(", ")}); setErr(""); setView("edit"); };
+  const handleSave = () => {
+    const label = form.label.trim();
+    if(!label){ setErr("Nama kategori wajib diisi."); return; }
+    const id = label.toLowerCase().replace(/\s+/g,"-");
+    if(view==="add" && categories.find(c=>c.id===id)){ setErr("Kategori dengan nama ini sudah ada."); return; }
+    const subs = form.subsRaw.split(",").map(s=>s.trim()).filter(Boolean);
+    if(view==="add") setCategories(prev=>[...prev,{id,label,subs}]);
+    else setCategories(prev=>prev.map(c=>c.id===editTarget.id?{...c,label,subs}:c));
+    setView("list"); setErr("");
+  };
+
+  if(view!=="list") {
+    return (
+      <div style={{padding:24,maxWidth:580}}>
+        <h2 className="section-title" style={{marginBottom:20}}>{view==="add"?"Tambah Kategori":"Edit Kategori"}</h2>
+        {err && <div style={{background:C.dangerBg,border:`1px solid #FECACA`,borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:C.danger}}>{err}</div>}
+        <div className="card" style={{padding:24}}>
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <div className="form-group">
+              <label className="form-label">Nama Kategori *</label>
+              <input className="form-input" placeholder="cth: Gelang" value={form.label} onChange={e=>setForm({...form,label:e.target.value})}/>
+              <p style={{fontSize:11,color:C.muted,marginTop:4}}>ID: <strong>{form.label.toLowerCase().replace(/\s+/g,"-")||"—"}</strong></p>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Sub-Kategori (pisahkan koma)</label>
+              <textarea className="form-input" placeholder="cth: Gelang Emas, Gelang Perak, Gelang Batu" value={form.subsRaw} onChange={e=>setForm({...form,subsRaw:e.target.value})}/>
+            </div>
+            {/* Buttons side by side */}
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setView("list");setErr("");}} className="btn-outline" style={{flex:"0 0 auto",padding:"10px 20px"}}>Batal</button>
+              <button onClick={handleSave} className="btn-primary" style={{flex:1,justifyContent:"center",padding:10}}>
+                {view==="add"?"Simpan Kategori":"Update Kategori"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{
-      display:"flex", justifyContent:"space-between",
-      alignItems:"center", padding:"12px 20px",
-      background:"white", borderBottom:"1px solid #eee",
-      position:"sticky", top:0, zIndex:100, flexShrink:0
-    }}>
-      <div style={{ fontSize:20, fontWeight:"bold", color:"#e91e8c", whiteSpace:"nowrap" }}>
-        MeiHua Official
+    <div style={{padding:24,flex:1,overflowY:"auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <div>
+          <h2 className="section-title">Manajemen Kategori</h2>
+          <p style={{color:C.muted,fontSize:12,marginTop:3}}>{categories.length} kategori aktif</p>
+        </div>
+        <button onClick={()=>{setForm({label:"",subsRaw:""});setErr("");setView("add");}} className="btn-primary"><Icon.plus/> Tambah Kategori</button>
+      </div>
+      <div className="card" style={{overflow:"hidden"}}>
+        <table className="data-table">
+          <thead><tr><th>Nama Kategori</th><th>ID</th><th>Sub-Kategori</th><th>Aksi</th></tr></thead>
+          <tbody>
+            {categories.length===0 && (
+              <tr><td colSpan={4} style={{textAlign:"center",padding:48,color:C.muted}}>Belum ada kategori.</td></tr>
+            )}
+            {categories.map(cat=>(
+              <tr key={cat.id}>
+                <td style={{fontWeight:700,color:C.dark,fontSize:13}}>{cat.label}</td>
+                <td><code style={{background:"#F3F0EC",color:C.muted,padding:"2px 8px",borderRadius:5,fontSize:11}}>{cat.id}</code></td>
+                <td>
+                  {cat.subs.length===0
+                    ? <span style={{color:C.border,fontStyle:"italic",fontSize:12}}>Tidak ada</span>
+                    : <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                        {cat.subs.map((s,j)=><span key={j} style={{background:C.goldLight,color:C.gold,padding:"2px 9px",borderRadius:20,fontSize:11,fontWeight:600}}>{s}</span>)}
+                      </div>
+                  }
+                </td>
+                <td>
+                  <div style={{display:"flex",gap:6}}>
+                    <button onClick={()=>openEdit(cat)} className="btn-edit"><Icon.edit/> Edit</button>
+                    <button onClick={()=>setDeleteTarget(cat)} className="btn-danger"><Icon.trash/> Hapus</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {deleteTarget && (
+        <ConfirmModal title="Hapus kategori?" desc={`Kategori "${deleteTarget.label}" akan dihapus permanen.`} danger
+          onConfirm={()=>{setCategories(prev=>prev.filter(c=>c.id!==deleteTarget.id));setDeleteTarget(null);}}
+          onCancel={()=>setDeleteTarget(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SalesReportPanel({ orders, products, categories }) {
+  const delivered = orders.filter(o=>o.status==="delivered");
+  const totalRevenue = delivered.reduce((s,o)=>s+o.total,0);
+  const avgOrder = delivered.length>0 ? Math.round(totalRevenue/delivered.length) : 0;
+  const conversionRate = orders.length>0 ? Math.round((delivered.length/orders.length)*100) : 0;
+
+  const catRevenue = {};
+  delivered.forEach(o=>o.items.forEach(it=>{
+    const p=products.find(pr=>pr.name===it.name);
+    const cat=p?categories.find(c=>c.id===p.cat)?.label||"Lainnya":"Lainnya";
+    catRevenue[cat]=(catRevenue[cat]||0)+(it.price*it.qty);
+  }));
+  const catData = Object.entries(catRevenue).sort((a,b)=>b[1]-a[1]);
+  const maxCat = catData[0]?catData[0][1]:1;
+
+  const prodRevenue = {};
+  delivered.forEach(o=>o.items.forEach(it=>{prodRevenue[it.name]=(prodRevenue[it.name]||0)+(it.price*it.qty);}));
+  const topProds = Object.entries(prodRevenue).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const months = ["Okt","Nov","Des","Jan","Feb","Mar","Apr"];
+  const monthlyRevenue = [1850000,2340000,3120000,2780000,3450000,2950000,totalRevenue||4200000];
+  const maxMonth = Math.max(...monthlyRevenue);
+  const catColors = [C.primary,"#7c3aed","#0891b2","#059669","#d97706","#dc2626"];
+
+  return (
+    <div style={{padding:24,flex:1,overflowY:"auto"}}>
+      <div style={{marginBottom:20}}>
+        <h2 className="section-title">Laporan Penjualan</h2>
+        <p style={{color:C.muted,fontSize:12,marginTop:3}}>Ringkasan performa toko MeiHua Official</p>
       </div>
 
-      <input placeholder="Cari produk..."
-        style={{
-          width:"38%", padding:"9px 14px",
-          borderRadius:20, border:"1px solid #ccc", fontSize:13, outline:"none"
-        }}
-      />
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
+        <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Pesanan selesai" color={C.primary}/>
+        <StatCard label="Total Pesanan" value={orders.length} sub="Semua status" color="#7c3aed"/>
+        <StatCard label="Rata-rata Pesanan" value={fmt(avgOrder)} sub="Per transaksi" color={C.info}/>
+        <StatCard label="Tingkat Selesai" value={`${conversionRate}%`} sub="dari total pesanan" color={C.success}/>
+      </div>
 
-      <div style={{ display:"flex", gap:12, alignItems:"center" }}>
-        <div style={{ position:"relative", cursor:"pointer" }} onClick={openCart}>
-          🛒
-          {cartCount > 0 && (
-            <span style={{
-              position:"absolute", top:-8, right:-10,
-              background:"#e91e8c", color:"white",
-              borderRadius:"50%", padding:"2px 6px", fontSize:11
-            }}>
-              {cartCount}
-            </span>
-          )}
+      <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:16,marginBottom:16}}>
+        {/* Bar chart */}
+        <div className="card" style={{padding:20}}>
+          <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:"0 0 3px",fontFamily:"'Cormorant Garamond',serif"}}>Tren Pendapatan</p>
+          <p style={{fontSize:12,color:C.muted,margin:"0 0 20px"}}>7 bulan terakhir</p>
+          <div style={{display:"flex",alignItems:"flex-end",gap:8,height:160}}>
+            {monthlyRevenue.map((val,i)=>{
+              const h=Math.round((val/maxMonth)*130);
+              const isLast=i===monthlyRevenue.length-1;
+              return (
+                <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+                  {isLast&&<p style={{fontSize:10,color:C.primary,fontWeight:700,margin:0,whiteSpace:"nowrap"}}>{fmt(val).replace("Rp ","Rp")}</p>}
+                  {!isLast&&<p style={{fontSize:10,color:"transparent",margin:0}}>x</p>}
+                  <div style={{width:"100%",height:`${h}px`,background:isLast?C.primary:"#F0EBE8",borderRadius:"6px 6px 0 0",transition:".3s"}}/>
+                  <p style={{fontSize:11,color:isLast?C.primary:C.muted,margin:0,fontWeight:isLast?700:400}}>{months[i]}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
+        {/* Category bars */}
+        <div className="card" style={{padding:20}}>
+          <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:"0 0 3px",fontFamily:"'Cormorant Garamond',serif"}}>Revenue per Kategori</p>
+          <p style={{fontSize:12,color:C.muted,margin:"0 0 16px"}}>Pesanan selesai</p>
+          {catData.length===0
+            ? <p style={{color:C.muted,fontSize:13,textAlign:"center",padding:20}}>Belum ada data</p>
+            : <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                {catData.map(([cat,rev],i)=>(
+                  <div key={cat}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                      <span style={{fontSize:12,fontWeight:600,color:C.dark}}>{cat}</span>
+                      <span style={{fontSize:12,fontWeight:700,color:catColors[i%catColors.length]}}>{fmt(rev)}</span>
+                    </div>
+                    <div style={{height:6,background:"#F3F0EC",borderRadius:10,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${Math.round((rev/maxCat)*100)}%`,background:catColors[i%catColors.length],borderRadius:10}}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+          }
+        </div>
+      </div>
+
+      {/* Top products */}
+      <div className="card" style={{overflow:"hidden"}}>
+        <div style={{padding:"16px 20px",borderBottom:`1px solid ${C.border}`}}>
+          <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:0,fontFamily:"'Cormorant Garamond',serif"}}>Produk Terlaris</p>
+        </div>
+        {topProds.length===0
+          ? <p style={{color:C.muted,fontSize:13,textAlign:"center",padding:32}}>Belum ada data produk terlaris</p>
+          : <table className="data-table">
+              <thead><tr><th style={{width:40}}>#</th><th>Produk</th><th>Pendapatan</th><th>Porsi</th></tr></thead>
+              <tbody>
+                {topProds.map(([name,rev],i)=>(
+                  <tr key={name}>
+                    <td>
+                      <span style={{width:26,height:26,borderRadius:"50%",background:i===0?C.goldLight:i===1?"#F3F4F6":"#F7F5F2",display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,color:i===0?C.gold:C.muted}}>{i+1}</span>
+                    </td>
+                    <td style={{fontWeight:600,color:C.dark,fontSize:13}}>{name}</td>
+                    <td><span style={{fontWeight:700,color:C.primary}}>{fmt(rev)}</span></td>
+                    <td>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <div style={{flex:1,height:5,background:"#F3F0EC",borderRadius:10,overflow:"hidden"}}>
+                          <div style={{height:"100%",width:`${Math.round((rev/(topProds[0][1]||1))*100)}%`,background:C.primary,borderRadius:10}}/>
+                        </div>
+                        <span style={{fontSize:12,fontWeight:600,color:C.muted,minWidth:34}}>{Math.round((rev/(topProds[0][1]||1))*100)}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+        }
+      </div>
+    </div>
+  );
+}
+
+function AdminPanel({ products, setProducts, categories, setCategories, orders, setOrders, user, onClose }) {
+  const [tab, setTab] = useState("dashboard");
+  const pendingCount = orders.filter(o=>o.status==="pending").length;
+  const totalRevenue = orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+o.total,0);
+  const deliveredCount = orders.filter(o=>o.status==="delivered").length;
+
+  const navItems = [
+    {key:"dashboard",label:"Dashboard",icon:<Icon.dashboard/>},
+    {key:"products",label:"Produk",icon:<Icon.product/>},
+    {key:"orders",label:"Pesanan",icon:<Icon.order/>,badge:pendingCount||null},
+    {key:"categories",label:"Kategori",icon:<Icon.category/>},
+    {key:"reports",label:"Laporan",icon:<Icon.report/>},
+  ];
+
+  return (
+    <div style={{height:"100vh",display:"flex",flexDirection:"column",background:C.surface,overflow:"hidden"}}>
+      {/* Top bar */}
+      <div style={{background:C.white,borderBottom:`1px solid ${C.border}`,padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <LogoIcon size={34}/>
+          <div>
+            <p style={{margin:0,fontSize:15,fontWeight:700,color:C.dark,fontFamily:"'Cormorant Garamond',serif"}}>MeiHua Official</p>
+            <p style={{margin:0,fontSize:11,color:C.muted}}>Admin Dashboard</p>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{textAlign:"right"}}>
+            <p style={{margin:0,fontSize:13,fontWeight:600,color:C.dark}}>{user}</p>
+            <p style={{margin:0,fontSize:11,color:C.muted}}>Administrator</p>
+          </div>
+          <div style={{width:34,height:34,borderRadius:"50%",background:C.goldLight,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color:C.gold,border:`1.5px solid ${C.border}`}}>
+            {user?.charAt(0).toUpperCase()}
+          </div>
+          <button onClick={onClose} className="btn-outline" style={{fontSize:12}}>Lihat Toko</button>
+        </div>
+      </div>
+
+      <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+        {/* Sidebar */}
+        <div className="admin-sidebar">
+          <div style={{padding:"16px 18px 8px"}}>
+            <p style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".9px",margin:0}}>Navigasi</p>
+          </div>
+          {navItems.map(n=>(
+            <div key={n.key} className={`admin-nav-item ${tab===n.key?"active":""}`} onClick={()=>setTab(n.key)}>
+              {n.icon}{n.label}
+              {n.badge && <span className="nav-badge">{n.badge}</span>}
+            </div>
+          ))}
+          <div style={{marginTop:"auto",padding:"14px 18px",borderTop:`1px solid ${C.border}`}}>
+            <p style={{fontSize:10.5,color:C.muted,margin:0}}>MeiHua v2.0 — Semester Genap 2025</p>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column"}}>
+          {tab==="dashboard" && (
+            <div style={{padding:24}}>
+              <h2 className="section-title" style={{marginBottom:4}}>Selamat datang, {user}</h2>
+              <p style={{color:C.muted,fontSize:12,marginBottom:20}}>Ringkasan performa toko Anda hari ini</p>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:24}}>
+                <StatCard label="Total Produk" value={products.length} sub="Produk aktif" color={C.primary}/>
+                <StatCard label="Pesanan Masuk" value={orders.length} sub="Semua status" color="#7c3aed"/>
+                <StatCard label="Pesanan Selesai" value={deliveredCount} sub="Terkirim" color={C.success}/>
+                <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Dari pesanan selesai" color={C.gold}/>
+              </div>
+              <div className="card" style={{overflow:"hidden"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${C.border}`}}>
+                  <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:0,fontFamily:"'Cormorant Garamond',serif"}}>Pesanan Terbaru</p>
+                  <button onClick={()=>setTab("orders")} style={{fontSize:12,color:C.primary,fontWeight:600,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Lihat semua</button>
+                </div>
+                <table className="data-table">
+                  <thead><tr><th>ID</th><th>Pelanggan</th><th>Total</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {orders.slice(0,5).map(o=>(
+                      <tr key={o.id}>
+                        <td style={{fontWeight:700,color:C.primary,fontSize:12}}>#{o.id}</td>
+                        <td style={{fontWeight:600,color:C.dark,fontSize:13}}>{o.customer}</td>
+                        <td style={{fontWeight:700,color:C.dark}}>{fmt(o.total)}</td>
+                        <td><StatusBadge status={o.status}/></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {tab==="products"   && <ProductsPanel products={products} setProducts={setProducts} categories={categories}/>}
+          {tab==="orders"     && <OrdersPanel orders={orders} setOrders={setOrders}/>}
+          {tab==="categories" && <CategoriesPanel categories={categories} setCategories={setCategories}/>}
+          {tab==="reports"    && <SalesReportPanel orders={orders} products={products} categories={categories}/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout }) {
+  return (
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 24px",background:C.white,borderBottom:`1px solid ${C.border}`,position:"sticky",top:0,zIndex:100,flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <LogoIcon size={32}/>
+        <div>
+          <span style={{fontSize:17,fontWeight:700,color:C.dark,fontFamily:"'Cormorant Garamond',serif",letterSpacing:".3px"}}>
+            MeiHua <span style={{color:C.primary}}>Official</span>
+          </span>
+          <p style={{margin:0,fontSize:10,color:C.gold,fontWeight:600,letterSpacing:"1px",textTransform:"uppercase"}}>Fine Jewelry</p>
+        </div>
+      </div>
+
+      <div style={{position:"relative",width:"38%"}}>
+        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:C.muted,pointerEvents:"none"}}><Icon.search/></span>
+        <input placeholder="Cari produk perhiasan..." style={{width:"100%",padding:"9px 16px 9px 36px",borderRadius:24,border:`1.5px solid ${C.border}`,fontSize:13,outline:"none",fontFamily:"'DM Sans',sans-serif",background:C.surface,color:C.dark,transition:".15s"}}
+          onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.border}
+        />
+      </div>
+
+      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+        <button onClick={openCart} style={{position:"relative",background:"none",border:"none",cursor:"pointer",padding:"8px",display:"flex",alignItems:"center",color:C.mid}}>
+          <Icon.cart/>
+          {cartCount>0 && <span style={{position:"absolute",top:0,right:0,background:C.primary,color:C.white,borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700}}>{cartCount}</span>}
+        </button>
         {!user ? (
           <>
-            <button className="btn-ghost" onClick={() => openAuth("login")}>Login</button>
-            <button className="btn-primary" onClick={() => openAuth("register")}>Register</button>
+            <button className="btn-outline" onClick={()=>openAuth("login")}>Masuk</button>
+            <button className="btn-primary" onClick={()=>openAuth("register")}>Daftar</button>
           </>
         ) : (
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <span style={{ fontSize:13 }}>Halo, <strong>{user}</strong></span>
-            <button onClick={openAdmin} style={{
-              background:"#fff0f7", color:"#e91e8c",
-              border:"1px solid #f9a8d4",
-              borderRadius:20, padding:"6px 14px",
-              fontSize:12, cursor:"pointer", fontWeight:"bold"
-            }}>
-              Admin
-            </button>
-            <button onClick={onLogout} style={{
-              background:"none", border:"none",
-              color:"#aaa", fontSize:12,
-              cursor:"pointer", padding:"6px 8px"
-            }}>
-              Keluar
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:C.goldLight,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color:C.gold,border:`1.5px solid ${C.border}`}}>
+              {user.charAt(0).toUpperCase()}
+            </div>
+            <span style={{fontSize:13,fontWeight:600,color:C.dark}}>{user}</span>
+            <button onClick={openAdmin} style={{background:C.goldLight,color:C.gold,border:`1.5px solid ${C.border}`,borderRadius:20,padding:"6px 14px",fontSize:12,cursor:"pointer",fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>Admin</button>
+            <button onClick={onLogout} style={{background:"none",border:"none",color:C.muted,fontSize:12,cursor:"pointer",padding:"6px 8px",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+              <Icon.logout/>Keluar
             </button>
           </div>
         )}
@@ -817,66 +1064,53 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
 }
 
 function ProductGrid({ products, cart, addToCart, removeFromCart }) {
-  if (products.length === 0) {
-    return (
-      <div style={{
-        display:"flex", flexDirection:"column",
-        alignItems:"center", justifyContent:"center",
-        height:300, color:"#aaa", gap:10
-      }}>
-        <span style={{ fontSize:48 }}>🔍</span>
-        <p style={{ fontSize:14 }}>Produk tidak ditemukan</p>
-      </div>
-    );
-  }
-
+  if(products.length===0) return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:300,color:C.muted,gap:10}}>
+      <Icon.search/>
+      <p style={{fontSize:14,fontWeight:600,marginTop:8}}>Produk tidak ditemukan</p>
+    </div>
+  );
   return (
-    <div style={{
-      display:"grid",
-      gridTemplateColumns:"repeat(auto-fill, minmax(155px, 1fr))",
-      gap:10, alignItems:"stretch"
-    }}>
-      {products.map(p => {
-        const item = cart.find(i => i.id === p.id);
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(162px,1fr))",gap:14,alignItems:"stretch"}}>
+      {products.map(p=>{
+        const item = cart.find(i=>i.id===p.id);
         return (
           <div key={p.id} className="product-card">
-            <div className="product-img">
-              {p.discount && <div className="badge">{p.discount}%</div>}
+            <div style={{height:160,position:"relative",overflow:"hidden",background:C.surface,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {p.discount && <div style={{position:"absolute",top:8,left:8,background:C.primary,color:C.white,fontSize:11,padding:"3px 8px",borderRadius:5,fontWeight:700,zIndex:1}}>−{p.discount}%</div>}
               {p.img
-                ? <img src={p.img} alt="produk" />
-                : <div className="placeholder"><span>📷</span><p style={{ margin:0 }}>Belum ada foto</p></div>
+                ? <img src={p.img} alt="produk" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                : <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,color:C.border}}>
+                    <Icon.photo/>
+                    <p style={{fontSize:11,color:C.muted,margin:0}}>Belum ada foto</p>
+                  </div>
               }
             </div>
-
-            <div style={{ padding:"8px 10px 10px", display:"flex", flexDirection:"column", flex:1 }}>
-              <p style={{
-                fontSize:12, margin:"0 0 4px", color:"#333",
-                lineHeight:1.4, height:"34px", overflow:"hidden",
-                display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical"
-              }}>
-                {p.name}
-              </p>
-              <p style={{ color:"#e91e8c", fontWeight:"bold", fontSize:14, margin:"0 0 2px" }}>
-                Rp {p.price.toLocaleString("id-ID")}
-              </p>
-              <div style={{ height:"18px", marginBottom:4 }}>
-                {p.oldPrice && (
-                  <span className="old-price">Rp {p.oldPrice.toLocaleString("id-ID")}</span>
-                )}
+            <div style={{padding:"12px 12px 14px",display:"flex",flexDirection:"column",flex:1}}>
+              <p style={{fontSize:12.5,margin:"0 0 6px",color:C.dark,lineHeight:1.4,height:36,overflow:"hidden",fontWeight:500}}>{p.name}</p>
+              <p style={{color:C.primary,fontWeight:700,fontSize:14,margin:"0 0 2px"}}>{fmt(p.price)}</p>
+              <div style={{height:17,marginBottom:5}}>
+                {p.oldPrice && <span className="old-price">{fmt(p.oldPrice)}</span>}
               </div>
-              <p style={{ fontSize:11, color:"#777", margin:"0 0 3px" }}>
-                ⭐ {p.rating} • {p.sold} terjual
-              </p>
-              <p className="seller-badge" style={{ margin:"0 0 6px" }}>✔ {p.seller}</p>
-              <div style={{ marginTop:"auto" }}>
+              <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
+                <Icon.star/>
+                <span style={{fontSize:11,color:C.muted}}>{p.rating} · {p.sold} terjual</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:3,marginBottom:10}}>
+                <Icon.verified/>
+                <span style={{fontSize:11,color:C.success,fontWeight:600}}>{p.seller}</span>
+              </div>
+              <div style={{marginTop:"auto"}}>
                 {item ? (
                   <div className="qty-control">
-                    <button className="qty-btn" onClick={() => removeFromCart(p.id)}>−</button>
+                    <button className="qty-btn" onClick={()=>removeFromCart(p.id)}>−</button>
                     <span className="qty-num">{item.qty}</span>
-                    <button className="qty-btn" onClick={() => addToCart(p)}>+</button>
+                    <button className="qty-btn" onClick={()=>addToCart(p)}>+</button>
                   </div>
                 ) : (
-                  <button className="btn-cart" onClick={() => addToCart(p)}>+ Keranjang</button>
+                  <button onClick={()=>addToCart(p)} style={{width:"100%",padding:"8px",background:C.primary,color:C.white,border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12,fontFamily:"'DM Sans',sans-serif",transition:".15s"}}>
+                    + Keranjang
+                  </button>
                 )}
               </div>
             </div>
@@ -888,149 +1122,101 @@ function ProductGrid({ products, cart, addToCart, removeFromCart }) {
 }
 
 function CartPopup({ cart, close, remove }) {
-  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   return (
-    <div style={{
-      position:"fixed", top:0, right:0,
-      width:"350px", height:"100vh",
-      background:"white",
-      boxShadow:"-2px 0 10px rgba(0,0,0,0.2)",
-      padding:20, zIndex:999,
-      display:"flex", flexDirection:"column"
-    }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <h3 style={{ margin:0 }}>Keranjang</h3>
-        <button onClick={close} style={{
-          border:"none", background:"none", fontSize:18, cursor:"pointer", color:"#aaa"
-        }}>✖</button>
-      </div>
-
-      {cart.length === 0 ? (
-        <div style={{ textAlign:"center", marginTop:60, color:"#aaa" }}>
-          <div style={{ fontSize:48 }}>🛒</div>
-          <p style={{ fontSize:14, marginTop:8 }}>Keranjang masih kosong</p>
+    <>
+      <div onClick={close} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.3)",zIndex:998}}/>
+      <div style={{position:"fixed",top:0,right:0,width:360,height:"100vh",background:C.white,boxShadow:"-4px 0 28px rgba(0,0,0,.1)",zIndex:999,display:"flex",flexDirection:"column"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"18px 20px",borderBottom:`1px solid ${C.border}`}}>
+          <h3 style={{margin:0,fontSize:16,fontWeight:700,color:C.dark,fontFamily:"'Cormorant Garamond',serif"}}>Keranjang Belanja</h3>
+          <button onClick={close} style={{border:"none",background:"#F5F3F0",borderRadius:7,width:30,height:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:C.mid}}>
+            <Icon.close/>
+          </button>
         </div>
-      ) : (
-        <>
-          <div style={{ flex:1, overflowY:"auto" }}>
-            {cart.map(item => (
-              <div key={item.id} style={{
-                display:"flex", justifyContent:"space-between",
-                marginBottom:15, borderBottom:"1px solid #eee", paddingBottom:10
-              }}>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:"bold" }}>{item.name}</div>
-                  <small style={{ color:"#777" }}>
-                    {item.qty} x Rp {item.price.toLocaleString("id-ID")}
-                  </small>
+        {cart.length===0 ? (
+          <div style={{textAlign:"center",marginTop:80,color:C.muted,padding:20}}>
+            <Icon.cart/>
+            <p style={{fontSize:14,marginTop:14,fontWeight:600}}>Keranjang masih kosong</p>
+            <p style={{fontSize:12,color:C.muted,marginTop:4}}>Tambahkan produk perhiasan pilihan Anda</p>
+          </div>
+        ) : (
+          <>
+            <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
+              {cart.map(item=>(
+                <div key={item.id} style={{display:"flex",justifyContent:"space-between",marginBottom:14,paddingBottom:14,borderBottom:`1px solid ${C.border}`,gap:10}}>
+                  <div style={{flex:1}}>
+                    <p style={{fontSize:13,fontWeight:600,color:C.dark,margin:"0 0 4px"}}>{item.name}</p>
+                    <p style={{fontSize:12,color:C.muted,margin:0}}>{item.qty} × {fmt(item.price)}</p>
+                  </div>
+                  <button onClick={()=>remove(item.id)} style={{background:C.dangerBg,border:"none",color:C.danger,cursor:"pointer",fontSize:12,borderRadius:6,padding:"4px 10px",fontWeight:600,flexShrink:0,fontFamily:"'DM Sans',sans-serif"}}>Hapus</button>
                 </div>
-                <button onClick={() => remove(item.id)} style={{
-                  background:"none", border:"none",
-                  color:"red", cursor:"pointer", fontSize:12, flexShrink:0
-                }}>Hapus</button>
+              ))}
+            </div>
+            <div style={{padding:"16px 20px",borderTop:`1px solid ${C.border}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+                <span style={{fontWeight:600,color:C.mid}}>Total</span>
+                <span style={{fontWeight:700,fontSize:17,color:C.primary}}>{fmt(total)}</span>
               </div>
-            ))}
-          </div>
-          <div style={{ borderTop:"1px solid #eee", paddingTop:12 }}>
-            <h4 style={{ color:"#e91e8c", margin:"0 0 10px" }}>
-              Total: Rp {total.toLocaleString("id-ID")}
-            </h4>
-            <button className="btn-cart">Checkout</button>
-          </div>
-        </>
-      )}
-    </div>
+              <button className="btn-primary" style={{width:"100%",justifyContent:"center",padding:12,fontSize:13,borderRadius:9}}>
+                Checkout Sekarang
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }
 
-function AuthModal({ close, setUser, mode, onLogin }) {
-  const [isLogin, setIsLogin] = useState(mode === "login");
+function AuthModal({ close, setUser, mode, onLogin, onRegisterUser }) {
+  const [isLogin, setIsLogin] = useState(mode==="login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    const nama = isLogin ? email.split("@")[0] : name;
-    setUser(nama);
-    onLogin();
-    close();
-  };
-
-  const inputStyle = {
-    width:"100%", padding:"10px 12px", margin:"8px 0",
-    borderRadius:8, border:"1px solid #e0e0e0",
-    boxSizing:"border-box", display:"block", fontSize:13, outline:"none"
+    e.preventDefault(); setErr("");
+    const nama = isLogin ? (email.split("@")[0]) : name.trim();
+    if(!nama){ setErr("Nama tidak boleh kosong."); return; }
+    if(!isLogin) onRegisterUser({ name:nama, email:email.trim() });
+    setUser(nama); onLogin(); close();
   };
 
   return (
-    <div style={{
-      position:"fixed", top:0, left:0,
-      width:"100%", height:"100%",
-      background:"rgba(0,0,0,0.4)",
-      display:"flex", justifyContent:"center", alignItems:"center",
-      zIndex:999
-    }}>
-      <div style={{
-        background:"white", padding:32,
-        borderRadius:14, width:360, position:"relative",
-        boxShadow:"0 8px 32px rgba(0,0,0,0.15)"
-      }}>
-        <button onClick={close} style={{
-          position:"absolute", top:12, right:14,
-          border:"none", background:"none", fontSize:18, cursor:"pointer", color:"#aaa"
-        }}>✖</button>
-
-        <div style={{ textAlign:"center", marginBottom:22 }}>
-          <div style={{ fontSize:32, marginBottom:8 }}>💍</div>
-          <h2 style={{ margin:0, fontSize:18, color:"#1a1a1a" }}>
-            {isLogin ? "Masuk ke Akun" : "Buat Akun Baru"}
+    <ModalOverlay onClose={close}>
+      <div style={{background:C.white,padding:"36px 32px",borderRadius:18,width:380,boxShadow:"0 24px 64px rgba(0,0,0,.18)"}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <LogoIcon size={44}/>
+          <h2 style={{margin:"14px 0 4px",fontSize:22,color:C.dark,fontWeight:700,fontFamily:"'Cormorant Garamond',serif"}}>
+            {isLogin ? "Selamat Datang" : "Buat Akun Baru"}
           </h2>
-          <p style={{ margin:"4px 0 0", fontSize:12, color:"#aaa" }}>MeiHua Official</p>
+          <p style={{margin:0,fontSize:12,color:C.muted}}>MeiHua Official — Fine Jewelry</p>
         </div>
-
-        <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <input placeholder="Nama lengkap" value={name}
-              onChange={e => setName(e.target.value)}
-              style={inputStyle} required />
-          )}
-          <input placeholder="Alamat email" type="email" value={email}
-            onChange={e => setEmail(e.target.value)}
-            style={inputStyle} required />
-          <input placeholder="Password" type="password" value={password}
-            onChange={e => setPassword(e.target.value)}
-            style={inputStyle} required />
-          <button style={{
-            width:"100%", padding:"12px",
-            background:"#e91e8c", color:"white",
-            border:"none", borderRadius:8,
-            fontWeight:"bold", fontSize:14,
-            cursor:"pointer", marginTop:8,
-            boxShadow:"0 2px 8px rgba(233,30,140,0.3)"
-          }} type="submit">
-            {isLogin ? "Masuk" : "Daftar Sekarang"}
+        {err && <div style={{background:C.dangerBg,border:`1px solid #FECACA`,borderRadius:9,padding:"10px 14px",marginBottom:14,fontSize:13,color:C.danger}}>{err}</div>}
+        <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:12}}>
+          {!isLogin && <input className="form-input" placeholder="Nama lengkap" value={name} onChange={e=>setName(e.target.value)} required/>}
+          <input className="form-input" placeholder="Alamat email" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
+          <input className="form-input" placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/>
+          <button type="submit" className="btn-primary" style={{justifyContent:"center",padding:12,fontSize:13,borderRadius:9,marginTop:4}}>
+            {isLogin ? "Masuk ke Akun" : "Daftar Sekarang"}
           </button>
         </form>
-
-        <p style={{ textAlign:"center", marginTop:14, fontSize:13, color:"#888" }}>
+        <div style={{height:1,background:C.border,margin:"18px 0"}}/>
+        <p style={{textAlign:"center",fontSize:13,color:C.muted,margin:0}}>
           {isLogin ? "Belum punya akun?" : "Sudah punya akun?"}{" "}
-          <span
-            style={{ color:"#e91e8c", cursor:"pointer", fontWeight:"bold" }}
-            onClick={() => setIsLogin(!isLogin)}
-          >
-            {isLogin ? "Daftar" : "Masuk"}
+          <span style={{color:C.primary,cursor:"pointer",fontWeight:700}} onClick={()=>{setIsLogin(!isLogin);setErr("");}}>
+            {isLogin ? "Daftar gratis" : "Masuk"}
           </span>
         </p>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [cart, setCart] = useState([]);
-  const [products, setProducts] = useState(initialProducts);
   const [showCart, setShowCart] = useState(false);
   const [showAuth, setShowAuth] = useState(null);
   const [adminMode, setAdminMode] = useState(false);
@@ -1038,172 +1224,83 @@ export default function App() {
   const [activeSub, setActiveSub] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  const [products, setProductsRaw] = useState(()=>loadLS("meihua_products", defaultProducts));
+  const [categories, setCategoriesRaw] = useState(()=>loadLS("meihua_categories", defaultCategories));
+  const [orders, setOrdersRaw] = useState(()=>loadLS("meihua_orders", defaultOrders));
+
+  const setProducts  = fn => setProductsRaw(prev  => { const n=typeof fn==="function"?fn(prev):fn;  saveLS("meihua_products",n);   return n; });
+  const setCategories= fn => setCategoriesRaw(prev => { const n=typeof fn==="function"?fn(prev):fn;  saveLS("meihua_categories",n); return n; });
+  const setOrders    = fn => setOrdersRaw(prev     => { const n=typeof fn==="function"?fn(prev):fn;  saveLS("meihua_orders",n);     return n; });
+
   const addToCart = (product) => {
     setCart(prev => {
-      const exist = prev.find(item => item.id === product.id);
-      if (exist) return prev.map(item =>
-        item.id === product.id ? { ...item, qty: item.qty + 1 } : item
-      );
-      return [...prev, { ...product, qty: 1 }];
+      const exist = prev.find(i=>i.id===product.id);
+      if(exist) return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);
+      return [...prev, {...product,qty:1}];
     });
   };
+  const removeFromCart = (id) => setCart(prev => prev.map(i=>i.id===id?{...i,qty:i.qty-1}:i).filter(i=>i.qty>0));
 
-  const removeFromCart = (id) => {
-    setCart(prev =>
-      prev.map(item => item.id === id ? { ...item, qty: item.qty - 1 } : item)
-          .filter(item => item.qty > 0)
-    );
-  };
-
-  const handleLogout = () => {
-    setShowLogoutConfirm(true);
-  };
-
-  const confirmLogout = () => {
-    setUser(null);
-    setAdminMode(false);
-    setShowLogoutConfirm(false);
-  };
-
-  const cancelLogout = () => {
-    setShowLogoutConfirm(false);
-  };
-
-  const handleCatClick = (cat) => {
-    if (activeCategory?.id === cat.id) { setActiveCategory(null); setActiveSub(null); }
-    else { setActiveCategory(cat); setActiveSub(null); }
-  };
-
-  const filteredProducts = activeCategory
-    ? products.filter(p => p.cat === activeCategory.id)
-    : products;
-
-  const activeCatData = categories.find(c => c.id === activeCategory?.id);
+  const filteredProducts = activeCategory ? products.filter(p=>p.cat===activeCategory.id) : products;
+  const activeCatData = categories.find(c=>c.id===activeCategory?.id);
 
   return (
     <>
-      <GlobalStyles />
-
+      <GlobalStyles/>
       {!adminMode && (
-        <TopNavbar
-          user={user}
-          cartCount={cart.reduce((a, b) => a + b.qty, 0)}
-          openCart={() => setShowCart(true)}
-          openAuth={(mode) => setShowAuth(mode)}
-          openAdmin={() => setAdminMode(true)}
-          onLogout={handleLogout}
-        />
+        <TopNavbar user={user} cartCount={cart.reduce((a,b)=>a+b.qty,0)} openCart={()=>setShowCart(true)} openAuth={m=>setShowAuth(m)} openAdmin={()=>setAdminMode(true)} onLogout={()=>setShowLogoutConfirm(true)}/>
       )}
 
       {user && adminMode ? (
-        <div style={{ height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden" }}>
-          <AdminPanel
-            products={products}
-            setProducts={setProducts}
-            user={user}
-            onClose={() => setAdminMode(false)}
-          />
-        </div>
+        <AdminPanel products={products} setProducts={setProducts} categories={categories} setCategories={setCategories} orders={orders} setOrders={setOrders} user={user} onClose={()=>setAdminMode(false)}/>
       ) : (
-        <div style={{ display:"flex", height:"calc(100vh - 57px)", overflow:"hidden" }}>
-
-          <div className="sidebar">
-            <div
-              className={`cat-item ${!activeCategory ? "active" : ""}`}
-              onClick={() => { setActiveCategory(null); setActiveSub(null); }}
-            >
-              Semua
-            </div>
-            {categories.map(cat => (
-              <div key={cat.id}
-                className={`cat-item ${activeCategory?.id === cat.id ? "active" : ""}`}
-                onClick={() => handleCatClick(cat)}
-              >
+        <div style={{display:"flex",height:"calc(100vh - 57px)",overflow:"hidden"}}>
+          {/* Category sidebar */}
+          <div className="store-sidebar">
+            <div className={`cat-item ${!activeCategory?"active":""}`} onClick={()=>{setActiveCategory(null);setActiveSub(null);}}>Semua</div>
+            {categories.map(cat=>(
+              <div key={cat.id} className={`cat-item ${activeCategory?.id===cat.id?"active":""}`} onClick={()=>{if(activeCategory?.id===cat.id){setActiveCategory(null);setActiveSub(null);}else{setActiveCategory(cat);setActiveSub(null);}}}>
                 {cat.label}
               </div>
             ))}
           </div>
 
-          <div className={`submenu ${activeCategory ? "open" : ""}`}>
+          {/* Submenu */}
+          <div className={`submenu ${activeCategory?"open":""}`}>
             {activeCatData && (
               <div className="submenu-inner">
                 <div className="submenu-title">{activeCatData.label}</div>
-                {activeCatData.subs.map((sub, i) => (
-                  <div key={i}
-                    className={`sub-item ${activeSub === i ? "active" : ""}`}
-                    onClick={() => setActiveSub(activeSub === i ? null : i)}
-                  >
-                    {sub}
-                  </div>
+                {activeCatData.subs.map((sub,i)=>(
+                  <div key={i} className={`sub-item ${activeSub===i?"active":""}`} onClick={()=>setActiveSub(activeSub===i?null:i)}>{sub}</div>
                 ))}
               </div>
             )}
           </div>
 
-          <div style={{ flex:1, overflowY:"auto", padding:16 }}>
-            <div style={{
-              fontSize:12, color:"#888", marginBottom:12,
-              display:"flex", alignItems:"center", gap:6
-            }}>
-              <span
-                style={{ cursor:"pointer", color: !activeCategory ? "#e91e8c" : "#888" }}
-                onClick={() => { setActiveCategory(null); setActiveSub(null); }}
-              >
-                Semua Produk
-              </span>
-              {activeCategory && (
-                <>
-                  <span>›</span>
-                  <span
-                    style={{ color: activeSub === null ? "#e91e8c" : "#888", cursor:"pointer" }}
-                    onClick={() => setActiveSub(null)}
-                  >
-                    {activeCategory.label}
-                  </span>
-                </>
-              )}
-              {activeSub !== null && activeCatData && (
-                <>
-                  <span>›</span>
-                  <span style={{ color:"#e91e8c" }}>{activeCatData.subs[activeSub]}</span>
-                </>
-              )}
+          {/* Main product area */}
+          <div style={{flex:1,overflowY:"auto",padding:18}}>
+            {/* Breadcrumb */}
+            <div style={{fontSize:11.5,color:C.muted,marginBottom:12,display:"flex",alignItems:"center",gap:5}}>
+              <span style={{cursor:"pointer",color:!activeCategory?C.primary:C.muted,fontWeight:600}} onClick={()=>{setActiveCategory(null);setActiveSub(null);}}>Semua Produk</span>
+              {activeCategory && <><span style={{color:C.border}}><Icon.chevron/></span><span style={{color:activeSub===null?C.primary:C.muted,cursor:"pointer",fontWeight:600}} onClick={()=>setActiveSub(null)}>{activeCategory.label}</span></>}
+              {activeSub!==null && activeCatData && <><span style={{color:C.border}}><Icon.chevron/></span><span style={{color:C.primary,fontWeight:600}}>{activeCatData.subs[activeSub]}</span></>}
             </div>
 
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-              <h2 style={{ margin:0, fontSize:15 }}>
-                {activeCategory ? activeCategory.label : "Semua Produk"}
-              </h2>
-              <span style={{ fontSize:12, color:"#888" }}>{filteredProducts.length} produk</span>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <h2 style={{margin:0,fontSize:16,fontWeight:700,color:C.dark,fontFamily:"'Cormorant Garamond',serif"}}>{activeCategory?activeCategory.label:"Semua Produk"}</h2>
+              <span style={{fontSize:12,color:C.muted}}>{filteredProducts.length} produk</span>
             </div>
-
-            <ProductGrid
-              products={filteredProducts}
-              cart={cart}
-              addToCart={addToCart}
-              removeFromCart={removeFromCart}
-            />
+            <ProductGrid products={filteredProducts} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart}/>
           </div>
         </div>
       )}
 
-      {showCart && (
-        <CartPopup cart={cart} close={() => setShowCart(false)} remove={removeFromCart} />
-      )}
-
-      {showAuth && (
-        <AuthModal
-          mode={showAuth}
-          close={() => setShowAuth(null)}
-          setUser={setUser}
-          onLogin={() => setAdminMode(true)}
-        />
-      )}
-
+      {showCart && <CartPopup cart={cart} close={()=>setShowCart(false)} remove={removeFromCart}/>}
+      {showAuth && <AuthModal mode={showAuth} close={()=>setShowAuth(null)} setUser={setUser} onLogin={()=>setAdminMode(true)} onRegisterUser={()=>{}}/>}
       {showLogoutConfirm && (
-        <LogoutConfirmModal
-          onConfirm={confirmLogout}
-          onCancel={cancelLogout}
+        <ConfirmModal title="Yakin ingin keluar?" desc="Anda akan keluar dari sesi ini."
+          onConfirm={()=>{setUser(null);setAdminMode(false);setShowLogoutConfirm(false);}}
+          onCancel={()=>setShowLogoutConfirm(false)}
         />
       )}
     </>
