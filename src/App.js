@@ -1,4 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { apiLogin, apiRegister, apiGetProducts, apiGetCategories, 
+         apiGetOrders, apiAddProduct, apiUpdateProduct, apiDeleteProduct,
+         apiAddCategory, apiUpdateCategory, apiDeleteCategory, 
+         apiUpdateOrderStatus } from './api';
 
 const C = {
   primary:   "#C8102E",   
@@ -70,7 +74,6 @@ const GlobalStyles = () => (
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 4px; }
 
-    /* ── BUTTONS ── */
     .btn-primary {
       display: inline-flex; align-items: center; gap: 6px;
       background: ${C.primary}; color: ${C.white};
@@ -112,7 +115,6 @@ const GlobalStyles = () => (
     }
     .btn-edit:hover { border-color: ${C.primary}; background: #FFF8F8; }
 
-    /* ── FORM ── */
     .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-label {
       font-size: 11px; font-weight: 600; color: ${C.muted};
@@ -131,13 +133,11 @@ const GlobalStyles = () => (
     }
     .form-input::placeholder { color: #C0B9B1; }
 
-    /* ── CARDS ── */
     .card {
       background: ${C.white}; border: 1px solid ${C.border};
       border-radius: 12px; overflow: hidden;
     }
 
-    /* ── TABLE ── */
     .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .data-table th {
       padding: 11px 16px; text-align: left;
@@ -152,7 +152,6 @@ const GlobalStyles = () => (
     .data-table tbody tr:hover td { background: #FAFAF8; }
     .data-table tbody tr:last-child td { border-bottom: none; }
 
-    /* ── STATUS BADGES ── */
     .badge {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 4px 10px; border-radius: 20px;
@@ -170,7 +169,6 @@ const GlobalStyles = () => (
     .badge-cancelled { background: ${C.dangerBg};  color: ${C.danger}; }
     .badge-dot-cancelled { background: ${C.danger}; }
 
-    /* ── PRODUCT CARD ── */
     .product-card {
       background: ${C.white}; border: 1px solid ${C.border};
       border-radius: 12px; overflow: hidden;
@@ -182,7 +180,6 @@ const GlobalStyles = () => (
       transform: translateY(-2px);
     }
 
-    /* ── SIDEBAR ── */
     .store-sidebar {
       width: 120px; background: ${C.white}; flex-shrink: 0;
       border-right: 1px solid ${C.border};
@@ -221,7 +218,6 @@ const GlobalStyles = () => (
     .sub-item:hover { background: #FFF8F8; color: ${C.primary}; }
     .sub-item.active { border-left-color: ${C.primary}; background: #FFF8F8; color: ${C.primary}; font-weight: 700; }
 
-    /* ── ADMIN SIDEBAR ── */
     .admin-sidebar {
       width: 224px; background: ${C.white};
       border-right: 1px solid ${C.border};
@@ -245,7 +241,6 @@ const GlobalStyles = () => (
       padding: 2px 7px; border-radius: 20px; font-weight: 700;
     }
 
-    /* ── QTY ── */
     .qty-control {
       display: flex; align-items: center;
       border: 1.5px solid ${C.border}; border-radius: 8px;
@@ -264,7 +259,6 @@ const GlobalStyles = () => (
 
     .old-price { text-decoration: line-through; color: ${C.muted}; font-size: 11px; }
 
-    /* ── MISC ── */
     .section-title {
       font-family: 'Cormorant Garamond', serif;
       font-size: 22px; font-weight: 700; color: ${C.dark};
@@ -275,38 +269,6 @@ const GlobalStyles = () => (
     textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   `}</style>
 );
-
-const defaultCategories = [
-  { id:"cincin",  label:"Cincin",       subs:["Cincin Emas","Cincin Berlian","Cincin Perak","Cincin Couple","Cincin Tunangan"] },
-  { id:"kalung",  label:"Kalung",       subs:["Kalung Emas","Kalung Perak","Kalung Mutiara","Kalung Choker","Kalung Liontin"] },
-  { id:"gelang",  label:"Gelang",       subs:["Gelang Emas","Gelang Perak","Gelang Batu","Gelang Charm","Gelang Couple"] },
-  { id:"anting",  label:"Anting",       subs:["Anting Gantung","Anting Stud","Anting Hoop","Anting Klip","Anting Permata"] },
-  { id:"bros",    label:"Bros",         subs:["Bros Bunga","Bros Hewan","Bros Enamel","Bros Vintage","Bros Kristal"] },
-  { id:"set",     label:"Set Perhiasan",subs:["Set Pernikahan","Set Hadiah","Set Pengantin","Set Couple","Set Premium"] },
-];
-const defaultProducts = [
-  { id:1, cat:"cincin",price:720000,  oldPrice:850000,  discount:15,  img:null, rating:4.9, sold:"100rb+", name:"Cincin Emas 18K Rose Gold",    seller:FIXED_SELLER },
-  { id:2, cat:"kalung",price:325000,  oldPrice:null,    discount:null,img:null, rating:4.8, sold:"50rb+",  name:"Kalung Mutiara Putih Elegan", seller:FIXED_SELLER },
-  { id:3, cat:"anting",price:256000,  oldPrice:320000,  discount:20,  img:null, rating:5.0, sold:"500rb+", name:"Anting Berlian Swarovski",     seller:FIXED_SELLER },
-  { id:4, cat:"gelang",price:185000,  oldPrice:null,    discount:null,img:null, rating:4.7, sold:"200rb+", name:"Gelang Charm Silver 925",      seller:FIXED_SELLER },
-  { id:5, cat:"bros",  price:89000,   oldPrice:110000,  discount:19,  img:null, rating:4.9, sold:"30rb+",  name:"Bros Bunga Kristal Ungu",      seller:FIXED_SELLER },
-  { id:6, cat:"set",   price:1250000, oldPrice:1500000, discount:17,  img:null, rating:4.8, sold:"10rb+",  name:"Set Perhiasan Couple Emas",    seller:FIXED_SELLER },
-  { id:7, cat:"cincin",price:145000,  oldPrice:null,    discount:null,img:null, rating:4.6, sold:"80rb+",  name:"Cincin Perak Ukir Bunga",      seller:FIXED_SELLER },
-  { id:8, cat:"kalung",price:380000,  oldPrice:420000,  discount:10,  img:null, rating:4.9, sold:"150rb+", name:"Kalung Liontin Bintang Emas",  seller:FIXED_SELLER },
-];
-const defaultOrders = [
-  { id:"MH-00124",customer:"Dewi Anggraini", phone:"08123456789",address:"Jl. Melati No.12, Jakarta", items:[{name:"Cincin Emas 18K Rose Gold",qty:1,price:720000}], total:720000,  status:"delivered",  date:"2025-04-28"},
-  { id:"MH-00123",customer:"Rina Kusuma",    phone:"08198765432",address:"Jl. Mawar No.5, Bandung",   items:[{name:"Kalung Mutiara Putih Elegan",qty:2,price:325000}], total:650000,  status:"shipped",    date:"2025-04-27"},
-  { id:"MH-00122",customer:"Siti Rahayu",    phone:"08211223344",address:"Jl. Kenanga No.8, Surabaya",items:[{name:"Anting Berlian Swarovski",qty:1,price:256000},{name:"Bros Bunga Kristal Ungu",qty:1,price:89000}], total:345000,  status:"processing", date:"2025-04-27"},
-  { id:"MH-00121",customer:"Mega Lestari",   phone:"08567890123",address:"Jl. Dahlia No.3, Yogyakarta",items:[{name:"Set Perhiasan Couple Emas",qty:1,price:1250000}],total:1250000, status:"pending",    date:"2025-04-26"},
-  { id:"MH-00120",customer:"Yanti Setiawan", phone:"08312345678",address:"Jl. Teratai No.7, Medan",   items:[{name:"Gelang Charm Silver 925",qty:3,price:185000}],    total:555000,  status:"cancelled",  date:"2025-04-25"},
-];
-
-function loadLS(key, fallback){
-  if(typeof window === "undefined") return fallback;
-  try { const r=localStorage.getItem(key); return r?JSON.parse(r):fallback; } catch { return fallback; }
-}
-function saveLS(key,val){ try { localStorage.setItem(key,JSON.stringify(val)); } catch{} }
 
 function ModalOverlay({ children, onClose }) {
   return (
@@ -360,7 +322,6 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
   return (
     <ModalOverlay onClose={onClose}>
       <div style={{background:C.white,borderRadius:16,width:480,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(0,0,0,.18)"}}>
-        {/* Header */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"20px 24px",borderBottom:`1px solid ${C.border}`}}>
           <div>
             <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".7px",margin:"0 0 4px"}}>Detail Pesanan</p>
@@ -370,17 +331,13 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
             <Icon.close/>
           </button>
         </div>
-
         <div style={{padding:24}}>
-          {/* Customer info */}
           <div style={{background:C.surface,borderRadius:10,padding:16,marginBottom:16}}>
             <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Informasi Pelanggan</p>
             <p style={{fontWeight:700,color:C.dark,margin:"0 0 5px",fontSize:14}}>{order.customer}</p>
             <p style={{fontSize:12,color:C.muted,margin:"0 0 3px"}}>Telp: {order.phone}</p>
             <p style={{fontSize:12,color:C.muted,margin:0}}>Alamat: {order.address}</p>
           </div>
-
-          {/* Items */}
           <div style={{marginBottom:16}}>
             <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Item Pesanan</p>
             {order.items.map((it,i)=>(
@@ -397,8 +354,6 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
               <span style={{fontWeight:700,fontSize:16,color:C.primary}}>{fmt(order.total)}</span>
             </div>
           </div>
-
-          {/* Status change */}
           <div>
             <p style={{fontSize:10.5,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Ubah Status</p>
             <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
@@ -450,9 +405,10 @@ function OrdersPanel({ orders, setOrders }) {
   );
   const revenue = orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+o.total,0);
 
-  const changeStatus = (id, status) => {
-    setOrders(prev=>prev.map(o=>o.id===id?{...o,status}:o));
-    setSelectedOrder(prev=>prev?{...prev,status}:prev);
+  const changeStatus = async (id, status) => {
+    await apiUpdateOrderStatus(id, status);
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    setSelectedOrder(prev => prev ? { ...prev, status } : prev);
   };
 
   const filterBtns = [["all","Semua"],["pending","Menunggu"],["processing","Diproses"],["shipped","Dikirim"],["delivered","Selesai"],["cancelled","Dibatalkan"]];
@@ -469,16 +425,12 @@ function OrdersPanel({ orders, setOrders }) {
           <input className="form-input" placeholder="Cari ID atau nama..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:240,paddingLeft:34}}/>
         </div>
       </div>
-
-      {/* Stats row */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
         <StatCard label="Total Pendapatan" value={fmt(revenue)} sub="Pesanan selesai" color={C.primary}/>
         <StatCard label="Pesanan Baru" value={counts.pending} sub="Menunggu konfirmasi" color={C.warning}/>
         <StatCard label="Dalam Proses" value={counts.processing+counts.shipped} sub="Diproses & dikirim" color={C.info}/>
         <StatCard label="Pesanan Selesai" value={counts.delivered} sub="Berhasil terkirim" color={C.success}/>
       </div>
-
-      {/* Filter chips */}
       <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
         {filterBtns.map(([k,v])=>(
           <button key={k} onClick={()=>setFilter(k)} style={{
@@ -495,8 +447,6 @@ function OrdersPanel({ orders, setOrders }) {
           </button>
         ))}
       </div>
-
-      {/* Table */}
       <div className="card" style={{overflow:"hidden"}}>
         <table className="data-table">
           <thead>
@@ -529,7 +479,6 @@ function OrdersPanel({ orders, setOrders }) {
           </tbody>
         </table>
       </div>
-
       {selectedOrder && (
         <OrderDetailModal order={selectedOrder} onClose={()=>setSelectedOrder(null)} onStatusChange={changeStatus}/>
       )}
@@ -543,7 +492,7 @@ function ProductsPanel({ products, setProducts, categories }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [previewImg, setPreviewImg] = useState(null);
   const imgRef = useRef();
-  const emptyForm = { name:"", cat:categories[0]?.id||"cincin", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" };
+  const emptyForm = { name:"", cat:categories[0]?.id||"", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" };
   const [form, setForm] = useState(emptyForm);
 
   const resetForm = () => { setForm(emptyForm); setPreviewImg(null); setEditTarget(null); };
@@ -552,15 +501,36 @@ function ProductsPanel({ products, setProducts, categories }) {
     setForm({name:p.name,cat:p.cat,price:p.price,oldPrice:p.oldPrice||"",discount:p.discount||"",rating:p.rating,sold:p.sold});
     setPreviewImg(p.img); setView("edit");
   };
-  const handleSave = () => {
-    if(!form.name||!form.price){ alert("Nama dan harga wajib diisi!"); return; }
-    const data = { cat:form.cat, name:form.name, price:Number(form.price), oldPrice:form.oldPrice?Number(form.oldPrice):null, discount:form.discount?Number(form.discount):null, img:previewImg, rating:Number(form.rating), sold:form.sold, seller:FIXED_SELLER };
-    if(view==="add") setProducts(prev=>[...prev,{id:Date.now(),...data}]);
-    else setProducts(prev=>prev.map(p=>p.id===editTarget.id?{...p,...data}:p));
-    setView("list"); resetForm();
+
+  const handleSave = async () => {
+    if (!form.name || !form.price) { alert("Nama dan harga wajib diisi!"); return; }
+    const data = {
+      name: form.name, cat: form.cat,
+      price: Number(form.price),
+      old_price: form.oldPrice ? Number(form.oldPrice) : null,
+      discount: form.discount ? Number(form.discount) : null,
+      img: previewImg, rating: Number(form.rating),
+      sold: form.sold, seller: FIXED_SELLER
+    };
+    try {
+      if (view === "add") {
+        const res = await apiAddProduct(data);
+        if (res.id) {
+          setProducts(prev => [...prev, { ...data, id: res.id, oldPrice: data.old_price }]);
+        }
+      } else {
+        await apiUpdateProduct(editTarget.id, data);
+        setProducts(prev => prev.map(p =>
+          p.id === editTarget.id ? { ...p, ...data, oldPrice: data.old_price } : p
+        ));
+      }
+      setView("list"); resetForm();
+    } catch {
+      alert("Gagal menyimpan produk. Coba lagi.");
+    }
   };
 
-  if(view==="add"||view==="edit") {
+  if (view==="add" || view==="edit") {
     return (
       <div style={{flex:1,overflowY:"auto"}}>
         <div style={{background:C.white,borderBottom:`1px solid ${C.border}`,padding:"16px 24px"}}>
@@ -569,7 +539,6 @@ function ProductsPanel({ products, setProducts, categories }) {
         </div>
         <div style={{padding:28,maxWidth:900,margin:"0 auto"}}>
           <div style={{display:"grid",gridTemplateColumns:"200px 1fr",gap:28,alignItems:"start"}}>
-            {/* Image upload */}
             <div>
               <label className="form-label" style={{marginBottom:8,display:"block"}}>Foto Produk</label>
               <div onClick={()=>imgRef.current.click()} style={{aspectRatio:"1",borderRadius:12,border:`2px dashed ${C.border}`,background:C.surface,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",overflow:"hidden",transition:".15s"}}>
@@ -580,8 +549,6 @@ function ProductsPanel({ products, setProducts, categories }) {
               </div>
               <input ref={imgRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f)setPreviewImg(URL.createObjectURL(f));}}/>
             </div>
-
-            {/* Form fields */}
             <div style={{display:"flex",flexDirection:"column",gap:14}}>
               <div className="form-group">
                 <label className="form-label">Nama Produk *</label>
@@ -615,7 +582,6 @@ function ProductsPanel({ products, setProducts, categories }) {
                   <input className="form-input" placeholder="100rb+" value={form.sold} onChange={e=>setForm({...form,sold:e.target.value})}/>
                 </div>
               </div>
-              {/* Action buttons side by side */}
               <div style={{display:"flex",gap:10,marginTop:4}}>
                 <button onClick={()=>{setView("list");resetForm();}} className="btn-outline" style={{flex:"0 0 auto",padding:"11px 20px"}}>Batal</button>
                 <button onClick={handleSave} className="btn-primary" style={{flex:1,justifyContent:"center",padding:11}}>
@@ -638,22 +604,18 @@ function ProductsPanel({ products, setProducts, categories }) {
         </div>
         <button onClick={()=>{resetForm();setView("add");}} className="btn-primary"><Icon.plus/> Tambah Produk</button>
       </div>
-
-      {/* Stats */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
         <StatCard label="Total Produk" value={products.length} color={C.primary}/>
         <StatCard label="Ada Diskon" value={products.filter(p=>p.discount).length} color={C.danger}/>
         <StatCard label="Ada Foto" value={products.filter(p=>p.img).length} color={C.success}/>
         <StatCard label="Kategori" value={categories.length} color={C.info}/>
       </div>
-
       <div className="card" style={{overflow:"hidden"}}>
         <table className="data-table">
           <thead><tr><th style={{width:52}}>Foto</th><th>Nama Produk</th><th>Harga</th><th>Kategori</th><th>Rating</th><th>Aksi</th></tr></thead>
           <tbody>
             {products.length===0 && (
               <tr><td colSpan={6} style={{textAlign:"center",padding:48,color:C.muted}}>
-                <Icon.product/>
                 <p style={{marginTop:10,fontSize:13}}>Belum ada produk.</p>
               </td></tr>
             )}
@@ -696,8 +658,15 @@ function ProductsPanel({ products, setProducts, categories }) {
         </table>
       </div>
       {deleteTarget && (
-        <ConfirmModal title="Hapus produk ini?" desc={`"${deleteTarget.name}" akan dihapus secara permanen dan tidak bisa dikembalikan.`} danger
-          onConfirm={()=>{setProducts(prev=>prev.filter(p=>p.id!==deleteTarget.id));setDeleteTarget(null);}}
+        <ConfirmModal
+          title="Hapus produk ini?"
+          desc={`"${deleteTarget.name}" akan dihapus secara permanen.`}
+          danger
+          onConfirm={async () => {
+            await apiDeleteProduct(deleteTarget.id);
+            setProducts(prev => prev.filter(p => p.id !== deleteTarget.id));
+            setDeleteTarget(null);
+          }}
           onCancel={()=>setDeleteTarget(null)}
         />
       )}
@@ -712,19 +681,33 @@ function CategoriesPanel({ categories, setCategories }) {
   const [form, setForm] = useState({ label:"", subsRaw:"" });
   const [err, setErr] = useState("");
 
-  const openEdit = (cat) => { setEditTarget(cat); setForm({label:cat.label,subsRaw:cat.subs.join(", ")}); setErr(""); setView("edit"); };
-  const handleSave = () => {
-    const label = form.label.trim();
-    if(!label){ setErr("Nama kategori wajib diisi."); return; }
-    const id = label.toLowerCase().replace(/\s+/g,"-");
-    if(view==="add" && categories.find(c=>c.id===id)){ setErr("Kategori dengan nama ini sudah ada."); return; }
-    const subs = form.subsRaw.split(",").map(s=>s.trim()).filter(Boolean);
-    if(view==="add") setCategories(prev=>[...prev,{id,label,subs}]);
-    else setCategories(prev=>prev.map(c=>c.id===editTarget.id?{...c,label,subs}:c));
-    setView("list"); setErr("");
+  const openEdit = (cat) => {
+    setEditTarget(cat);
+    setForm({label:cat.label, subsRaw:cat.subs.join(", ")});
+    setErr(""); setView("edit");
   };
 
-  if(view!=="list") {
+  const handleSave = async () => {
+    const label = form.label.trim();
+    if (!label) { setErr("Nama kategori wajib diisi."); return; }
+    const id = label.toLowerCase().replace(/\s+/g, "-");
+    if (view==="add" && categories.find(c=>c.id===id)) { setErr("Kategori dengan nama ini sudah ada."); return; }
+    const subs = form.subsRaw.split(",").map(s=>s.trim()).filter(Boolean);
+    try {
+      if (view==="add") {
+        const res = await apiAddCategory({ id, label, subs });
+        setCategories(prev => [...prev, { id: res.id || id, label, subs }]);
+      } else {
+        await apiUpdateCategory(editTarget.id, { label, subs });
+        setCategories(prev => prev.map(c => c.id===editTarget.id ? { ...c, label, subs } : c));
+      }
+      setView("list"); setErr("");
+    } catch {
+      setErr("Gagal menyimpan kategori. Coba lagi.");
+    }
+  };
+
+  if (view !== "list") {
     return (
       <div style={{padding:24,maxWidth:580}}>
         <h2 className="section-title" style={{marginBottom:20}}>{view==="add"?"Tambah Kategori":"Edit Kategori"}</h2>
@@ -740,7 +723,6 @@ function CategoriesPanel({ categories, setCategories }) {
               <label className="form-label">Sub-Kategori (pisahkan koma)</label>
               <textarea className="form-input" placeholder="cth: Gelang Emas, Gelang Perak, Gelang Batu" value={form.subsRaw} onChange={e=>setForm({...form,subsRaw:e.target.value})}/>
             </div>
-            {/* Buttons side by side */}
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>{setView("list");setErr("");}} className="btn-outline" style={{flex:"0 0 auto",padding:"10px 20px"}}>Batal</button>
               <button onClick={handleSave} className="btn-primary" style={{flex:1,justifyContent:"center",padding:10}}>
@@ -793,8 +775,15 @@ function CategoriesPanel({ categories, setCategories }) {
         </table>
       </div>
       {deleteTarget && (
-        <ConfirmModal title="Hapus kategori?" desc={`Kategori "${deleteTarget.label}" akan dihapus permanen.`} danger
-          onConfirm={()=>{setCategories(prev=>prev.filter(c=>c.id!==deleteTarget.id));setDeleteTarget(null);}}
+        <ConfirmModal
+          title="Hapus kategori?"
+          desc={`Kategori "${deleteTarget.label}" akan dihapus permanen.`}
+          danger
+          onConfirm={async () => {
+            await apiDeleteCategory(deleteTarget.id);
+            setCategories(prev => prev.filter(c => c.id !== deleteTarget.id));
+            setDeleteTarget(null);
+          }}
           onCancel={()=>setDeleteTarget(null)}
         />
       )}
@@ -832,16 +821,13 @@ function SalesReportPanel({ orders, products, categories }) {
         <h2 className="section-title">Laporan Penjualan</h2>
         <p style={{color:C.muted,fontSize:12,marginTop:3}}>Ringkasan performa toko MeiHua Official</p>
       </div>
-
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
         <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Pesanan selesai" color={C.primary}/>
         <StatCard label="Total Pesanan" value={orders.length} sub="Semua status" color="#7c3aed"/>
         <StatCard label="Rata-rata Pesanan" value={fmt(avgOrder)} sub="Per transaksi" color={C.info}/>
         <StatCard label="Tingkat Selesai" value={`${conversionRate}%`} sub="dari total pesanan" color={C.success}/>
       </div>
-
       <div style={{display:"grid",gridTemplateColumns:"1.6fr 1fr",gap:16,marginBottom:16}}>
-        {/* Bar chart */}
         <div className="card" style={{padding:20}}>
           <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:"0 0 3px",fontFamily:"'Cormorant Garamond',serif"}}>Tren Pendapatan</p>
           <p style={{fontSize:12,color:C.muted,margin:"0 0 20px"}}>7 bulan terakhir</p>
@@ -860,8 +846,6 @@ function SalesReportPanel({ orders, products, categories }) {
             })}
           </div>
         </div>
-
-        {/* Category bars */}
         <div className="card" style={{padding:20}}>
           <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:"0 0 3px",fontFamily:"'Cormorant Garamond',serif"}}>Revenue per Kategori</p>
           <p style={{fontSize:12,color:C.muted,margin:"0 0 16px"}}>Pesanan selesai</p>
@@ -883,8 +867,6 @@ function SalesReportPanel({ orders, products, categories }) {
           }
         </div>
       </div>
-
-      {/* Top products */}
       <div className="card" style={{overflow:"hidden"}}>
         <div style={{padding:"16px 20px",borderBottom:`1px solid ${C.border}`}}>
           <p style={{fontWeight:700,fontSize:14,color:C.dark,margin:0,fontFamily:"'Cormorant Garamond',serif"}}>Produk Terlaris</p>
@@ -935,7 +917,6 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
 
   return (
     <div style={{height:"100vh",display:"flex",flexDirection:"column",background:C.surface,overflow:"hidden"}}>
-      {/* Top bar */}
       <div style={{background:C.white,borderBottom:`1px solid ${C.border}`,padding:"12px 24px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <LogoIcon size={34}/>
@@ -955,9 +936,7 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
           <button onClick={onClose} className="btn-outline" style={{fontSize:12}}>Lihat Toko</button>
         </div>
       </div>
-
       <div style={{display:"flex",flex:1,overflow:"hidden"}}>
-        {/* Sidebar */}
         <div className="admin-sidebar">
           <div style={{padding:"16px 18px 8px"}}>
             <p style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:".9px",margin:0}}>Navigasi</p>
@@ -972,8 +951,6 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
             <p style={{fontSize:10.5,color:C.muted,margin:0}}>MeiHua v2.0 — Semester Genap 2025</p>
           </div>
         </div>
-
-        {/* Main content */}
         <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column"}}>
           {tab==="dashboard" && (
             <div style={{padding:24}}>
@@ -1028,14 +1005,12 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
           <p style={{margin:0,fontSize:10,color:C.gold,fontWeight:600,letterSpacing:"1px",textTransform:"uppercase"}}>Fine Jewelry</p>
         </div>
       </div>
-
       <div style={{position:"relative",width:"38%"}}>
         <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:C.muted,pointerEvents:"none"}}><Icon.search/></span>
         <input placeholder="Cari produk perhiasan..." style={{width:"100%",padding:"9px 16px 9px 36px",borderRadius:24,border:`1.5px solid ${C.border}`,fontSize:13,outline:"none",fontFamily:"'DM Sans',sans-serif",background:C.surface,color:C.dark,transition:".15s"}}
           onFocus={e=>e.target.style.borderColor=C.primary} onBlur={e=>e.target.style.borderColor=C.border}
         />
       </div>
-
       <div style={{display:"flex",gap:10,alignItems:"center"}}>
         <button onClick={openCart} style={{position:"relative",background:"none",border:"none",cursor:"pointer",padding:"8px",display:"flex",alignItems:"center",color:C.mid}}>
           <Icon.cart/>
@@ -1064,7 +1039,7 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
 }
 
 function ProductGrid({ products, cart, addToCart, removeFromCart }) {
-  if(products.length===0) return (
+  if (products.length===0) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:300,color:C.muted,gap:10}}>
       <Icon.search/>
       <p style={{fontSize:14,fontWeight:600,marginTop:8}}>Produk tidak ditemukan</p>
@@ -1168,19 +1143,36 @@ function CartPopup({ cart, close, remove }) {
   );
 }
 
-function AuthModal({ close, setUser, mode, onLogin, onRegisterUser }) {
+function AuthModal({ close, setUser, mode, onLogin }) {
   const [isLogin, setIsLogin] = useState(mode==="login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); setErr("");
-    const nama = isLogin ? (email.split("@")[0]) : name.trim();
-    if(!nama){ setErr("Nama tidak boleh kosong."); return; }
-    if(!isLogin) onRegisterUser({ name:nama, email:email.trim() });
-    setUser(nama); onLogin(); close();
+    try {
+      let res;
+      if (isLogin) {
+        res = await apiLogin(email, password);
+      } else {
+        if (!name.trim()) { setErr("Nama tidak boleh kosong."); return; }
+        res = await apiRegister(name.trim(), email, password);
+      }
+      if (res.token) {
+        localStorage.setItem('meihua_token', res.token);
+        localStorage.setItem('meihua_role', res.user.role);
+        localStorage.setItem('meihua_name', res.user.name);
+        setUser(res.user.name);
+        onLogin();
+        close();
+      } else {
+        setErr(res.message || 'Terjadi kesalahan.');
+      }
+    } catch {
+      setErr('Tidak dapat terhubung ke server.');
+    }
   };
 
   return (
@@ -1223,19 +1215,45 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSub, setActiveSub] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [products, setProductsRaw] = useState(()=>loadLS("meihua_products", defaultProducts));
-  const [categories, setCategoriesRaw] = useState(()=>loadLS("meihua_categories", defaultCategories));
-  const [orders, setOrdersRaw] = useState(()=>loadLS("meihua_orders", defaultOrders));
+  useEffect(() => {
+    const token = localStorage.getItem('meihua_token');
+    const savedName = localStorage.getItem('meihua_name');
+    if (token && savedName) {
+      setUser(savedName);
+    }
+    async function fetchAll() {
+      try {
+        const [prods, cats] = await Promise.all([
+          apiGetProducts(),
+          apiGetCategories(),
+        ]);
+        setProducts(Array.isArray(prods) ? prods : []);
+        setCategories(Array.isArray(cats) ? cats : []);
+      } catch (err) {
+        console.error('Gagal fetch data awal:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAll();
+  }, []);
 
-  const setProducts  = fn => setProductsRaw(prev  => { const n=typeof fn==="function"?fn(prev):fn;  saveLS("meihua_products",n);   return n; });
-  const setCategories= fn => setCategoriesRaw(prev => { const n=typeof fn==="function"?fn(prev):fn;  saveLS("meihua_categories",n); return n; });
-  const setOrders    = fn => setOrdersRaw(prev     => { const n=typeof fn==="function"?fn(prev):fn;  saveLS("meihua_orders",n);     return n; });
+  useEffect(() => {
+    if (!user) return;
+    apiGetOrders().then(data => {
+      setOrders(Array.isArray(data) ? data : []);
+    }).catch(console.error);
+  }, [user]);
 
   const addToCart = (product) => {
     setCart(prev => {
       const exist = prev.find(i=>i.id===product.id);
-      if(exist) return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);
+      if (exist) return prev.map(i=>i.id===product.id?{...i,qty:i.qty+1}:i);
       return [...prev, {...product,qty:1}];
     });
   };
@@ -1244,28 +1262,51 @@ export default function App() {
   const filteredProducts = activeCategory ? products.filter(p=>p.cat===activeCategory.id) : products;
   const activeCatData = categories.find(c=>c.id===activeCategory?.id);
 
+  if (loading) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.surface}}>
+      <div style={{textAlign:"center"}}>
+        <LogoIcon size={48}/>
+        <p style={{marginTop:16,color:C.muted,fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>Memuat data...</p>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <GlobalStyles/>
       {!adminMode && (
-        <TopNavbar user={user} cartCount={cart.reduce((a,b)=>a+b.qty,0)} openCart={()=>setShowCart(true)} openAuth={m=>setShowAuth(m)} openAdmin={()=>setAdminMode(true)} onLogout={()=>setShowLogoutConfirm(true)}/>
+        <TopNavbar
+          user={user}
+          cartCount={cart.reduce((a,b)=>a+b.qty,0)}
+          openCart={()=>setShowCart(true)}
+          openAuth={m=>setShowAuth(m)}
+          openAdmin={()=>setAdminMode(true)}
+          onLogout={()=>setShowLogoutConfirm(true)}
+        />
       )}
 
       {user && adminMode ? (
-        <AdminPanel products={products} setProducts={setProducts} categories={categories} setCategories={setCategories} orders={orders} setOrders={setOrders} user={user} onClose={()=>setAdminMode(false)}/>
+        <AdminPanel
+          products={products} setProducts={setProducts}
+          categories={categories} setCategories={setCategories}
+          orders={orders} setOrders={setOrders}
+          user={user} onClose={()=>setAdminMode(false)}
+        />
       ) : (
         <div style={{display:"flex",height:"calc(100vh - 57px)",overflow:"hidden"}}>
-          {/* Category sidebar */}
           <div className="store-sidebar">
             <div className={`cat-item ${!activeCategory?"active":""}`} onClick={()=>{setActiveCategory(null);setActiveSub(null);}}>Semua</div>
             {categories.map(cat=>(
-              <div key={cat.id} className={`cat-item ${activeCategory?.id===cat.id?"active":""}`} onClick={()=>{if(activeCategory?.id===cat.id){setActiveCategory(null);setActiveSub(null);}else{setActiveCategory(cat);setActiveSub(null);}}}>
+              <div key={cat.id} className={`cat-item ${activeCategory?.id===cat.id?"active":""}`}
+                onClick={()=>{
+                  if(activeCategory?.id===cat.id){setActiveCategory(null);setActiveSub(null);}
+                  else{setActiveCategory(cat);setActiveSub(null);}
+                }}>
                 {cat.label}
               </div>
             ))}
           </div>
 
-          {/* Submenu */}
           <div className={`submenu ${activeCategory?"open":""}`}>
             {activeCatData && (
               <div className="submenu-inner">
@@ -1277,15 +1318,12 @@ export default function App() {
             )}
           </div>
 
-          {/* Main product area */}
           <div style={{flex:1,overflowY:"auto",padding:18}}>
-            {/* Breadcrumb */}
             <div style={{fontSize:11.5,color:C.muted,marginBottom:12,display:"flex",alignItems:"center",gap:5}}>
               <span style={{cursor:"pointer",color:!activeCategory?C.primary:C.muted,fontWeight:600}} onClick={()=>{setActiveCategory(null);setActiveSub(null);}}>Semua Produk</span>
               {activeCategory && <><span style={{color:C.border}}><Icon.chevron/></span><span style={{color:activeSub===null?C.primary:C.muted,cursor:"pointer",fontWeight:600}} onClick={()=>setActiveSub(null)}>{activeCategory.label}</span></>}
               {activeSub!==null && activeCatData && <><span style={{color:C.border}}><Icon.chevron/></span><span style={{color:C.primary,fontWeight:600}}>{activeCatData.subs[activeSub]}</span></>}
             </div>
-
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
               <h2 style={{margin:0,fontSize:16,fontWeight:700,color:C.dark,fontFamily:"'Cormorant Garamond',serif"}}>{activeCategory?activeCategory.label:"Semua Produk"}</h2>
               <span style={{fontSize:12,color:C.muted}}>{filteredProducts.length} produk</span>
@@ -1296,10 +1334,19 @@ export default function App() {
       )}
 
       {showCart && <CartPopup cart={cart} close={()=>setShowCart(false)} remove={removeFromCart}/>}
-      {showAuth && <AuthModal mode={showAuth} close={()=>setShowAuth(null)} setUser={setUser} onLogin={()=>setAdminMode(true)} onRegisterUser={()=>{}}/>}
+      {showAuth && <AuthModal mode={showAuth} close={()=>setShowAuth(null)} setUser={setUser} onLogin={()=>setAdminMode(true)}/>}
       {showLogoutConfirm && (
-        <ConfirmModal title="Yakin ingin keluar?" desc="Anda akan keluar dari sesi ini."
-          onConfirm={()=>{setUser(null);setAdminMode(false);setShowLogoutConfirm(false);}}
+        <ConfirmModal
+          title="Yakin ingin keluar?"
+          desc="Anda akan keluar dari sesi ini."
+          onConfirm={()=>{
+            localStorage.removeItem('meihua_token');
+            localStorage.removeItem('meihua_role');
+            localStorage.removeItem('meihua_name');
+            setUser(null);
+            setAdminMode(false);
+            setShowLogoutConfirm(false);
+          }}
           onCancel={()=>setShowLogoutConfirm(false)}
         />
       )}
