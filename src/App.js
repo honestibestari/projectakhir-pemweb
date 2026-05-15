@@ -1144,34 +1144,50 @@ function CartPopup({ cart, close, remove }) {
 }
 
 function AuthModal({ close, setUser, mode, onLogin }) {
-  const [isLogin, setIsLogin] = useState(mode==="login");
+  const [isLogin, setIsLogin] = useState(mode === "login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setErr("");
+    e.preventDefault();
+    setErr("");
+    setLoading(true);
+
     try {
       let res;
       if (isLogin) {
         res = await apiLogin(email, password);
       } else {
-        if (!name.trim()) { setErr("Nama tidak boleh kosong."); return; }
+        if (!name.trim()) { setErr("Nama tidak boleh kosong."); setLoading(false); return; }
         res = await apiRegister(name.trim(), email, password);
       }
-      if (res.token) {
+
+      if (res && res.token) {
         localStorage.setItem('meihua_token', res.token);
-        localStorage.setItem('meihua_role', res.user.role);
-        localStorage.setItem('meihua_name', res.user.name);
-        setUser(res.user.name);
+
+        const userName =
+          (typeof res.user === 'object' ? res.user?.name : res.user) ||
+          email.split('@')[0];
+        const userRole =
+          (typeof res.user === 'object' ? res.user?.role : 'user') || 'user';
+
+        localStorage.setItem('meihua_role', userRole);
+        localStorage.setItem('meihua_name', userName);
+
+        setUser(userName);
         onLogin();
         close();
       } else {
-        setErr(res.message || 'Terjadi kesalahan.');
+        setErr(res?.message || 'Terjadi kesalahan. Cek console untuk detail.');
       }
-    } catch {
+    } catch (error) {
+      console.error('[AuthModal] Unexpected error:', error);
       setErr('Tidak dapat terhubung ke server.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1185,19 +1201,31 @@ function AuthModal({ close, setUser, mode, onLogin }) {
           </h2>
           <p style={{margin:0,fontSize:12,color:C.muted}}>MeiHua Official — Fine Jewelry</p>
         </div>
-        {err && <div style={{background:C.dangerBg,border:`1px solid #FECACA`,borderRadius:9,padding:"10px 14px",marginBottom:14,fontSize:13,color:C.danger}}>{err}</div>}
+        {err && (
+          <div style={{background:C.dangerBg,border:`1px solid #FECACA`,borderRadius:9,padding:"10px 14px",marginBottom:14,fontSize:13,color:C.danger}}>
+            {err}
+          </div>
+        )}
         <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:12}}>
-          {!isLogin && <input className="form-input" placeholder="Nama lengkap" value={name} onChange={e=>setName(e.target.value)} required/>}
-          <input className="form-input" placeholder="Alamat email" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
-          <input className="form-input" placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/>
-          <button type="submit" className="btn-primary" style={{justifyContent:"center",padding:12,fontSize:13,borderRadius:9,marginTop:4}}>
-            {isLogin ? "Masuk ke Akun" : "Daftar Sekarang"}
+          {!isLogin && (
+            <input className="form-input" placeholder="Nama lengkap" value={name}
+              onChange={e=>setName(e.target.value)} required disabled={loading}/>
+          )}
+          <input className="form-input" placeholder="Alamat email" type="email"
+            value={email} onChange={e=>setEmail(e.target.value)} required disabled={loading}/>
+          <input className="form-input" placeholder="Password" type="password"
+            value={password} onChange={e=>setPassword(e.target.value)} required disabled={loading}/>
+          <button type="submit" className="btn-primary"
+            disabled={loading}
+            style={{justifyContent:"center",padding:12,fontSize:13,borderRadius:9,marginTop:4,opacity:loading?0.7:1}}>
+            {loading ? "Memproses..." : (isLogin ? "Masuk ke Akun" : "Daftar Sekarang")}
           </button>
         </form>
         <div style={{height:1,background:C.border,margin:"18px 0"}}/>
         <p style={{textAlign:"center",fontSize:13,color:C.muted,margin:0}}>
           {isLogin ? "Belum punya akun?" : "Sudah punya akun?"}{" "}
-          <span style={{color:C.primary,cursor:"pointer",fontWeight:700}} onClick={()=>{setIsLogin(!isLogin);setErr("");}}>
+          <span style={{color:C.primary,cursor:"pointer",fontWeight:700}}
+            onClick={()=>{setIsLogin(!isLogin);setErr("");}}>
             {isLogin ? "Daftar gratis" : "Masuk"}
           </span>
         </p>
@@ -1220,13 +1248,16 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const token = localStorage.getItem('meihua_token');
     const savedName = localStorage.getItem('meihua_name');
     if (token && savedName) {
       setUser(savedName);
     }
-    async function fetchAll() {
+
+    async function fetchPublicData() {
+      setLoading(true);
       try {
         const [prods, cats] = await Promise.all([
           apiGetProducts(),
@@ -1235,20 +1266,24 @@ export default function App() {
         setProducts(Array.isArray(prods) ? prods : []);
         setCategories(Array.isArray(cats) ? cats : []);
       } catch (err) {
-        console.error('Gagal fetch data awal:', err);
+        console.error('[App] fetchPublicData unexpected error:', err);
       } finally {
         setLoading(false);
       }
     }
-    fetchAll();
-  }, []);
+
+    fetchPublicData();
+  }, []); 
 
   useEffect(() => {
     if (!user) return;
-    apiGetOrders().then(data => {
-      setOrders(Array.isArray(data) ? data : []);
-    }).catch(console.error);
-  }, [user]);
+    const token = localStorage.getItem('meihua_token');
+    if (!token) return; 
+
+    apiGetOrders()
+      .then(data => setOrders(Array.isArray(data) ? data : []))
+      .catch(err => console.error('[App] fetchOrders error:', err));
+  }, [user]); 
 
   const addToCart = (product) => {
     setCart(prev => {

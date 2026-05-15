@@ -5,66 +5,244 @@ function getToken() {
 }
 
 function authHeaders() {
+  const token = getToken();
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${getToken()}`
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
   };
 }
 
-export const apiLogin = (email, password) =>
-  fetch(`${BASE}/auth/login`, {
+/**
+ * Wrapper fetch dengan logging otomatis.
+ * Melempar Error jika HTTP status >= 400.
+ */
+async function apiFetch(url, options = {}) {
+  const fullUrl = url.startsWith('http') ? url : `${BASE}${url}`;
+  console.log(`[MeiHua API] ${options.method || 'GET'} ${fullUrl}`);
+
+  let res;
+  try {
+    res = await fetch(fullUrl, {...options,});
+  } catch (networkErr) {
+    console.error(`[MeiHua API] Network error on ${fullUrl}:`, networkErr);
+    throw new Error(
+      'Tidak dapat terhubung ke server. Pastikan:\n' +
+      '1. Backend sudah berjalan (node server.js)\n' +
+      '2. Proxy di package.json sudah diset ke port yang benar'
+    );
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+
+  console.log(`[MeiHua API] ${res.status} response from ${fullUrl}:`, data);
+
+  if (!res.ok) {
+    const msg = data?.message || data?.error || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+
+  return data;
+}
+
+function extractToken(data) {
+  return (
+    data?.token ||
+    data?.access_token ||
+    data?.data?.token ||
+    data?.data?.access_token ||
+    null
+  );
+}
+
+function extractUser(data) {
+  return (
+    data?.user ||
+    data?.data?.user ||
+    data?.data ||
+    null
+  );
+}
+
+export async function apiLogin(email, password) {
+  try {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const token = extractToken(data);
+    const user  = extractUser(data);
+
+    if (!token) {
+      console.error('[MeiHua API] Login response tidak mengandung token:', data);
+      return { message: data?.message || 'Login gagal: token tidak ditemukan.' };
+    }
+
+    let normalizedUser;
+    if (user && typeof user === 'object') {
+      normalizedUser = {
+        name: user.name || user.username || user.email || email.split('@')[0],
+        role: user.role || 'user',
+      };
+    } else if (typeof user === 'string') {
+      normalizedUser = { name: user, role: 'user' };
+    } else {
+      normalizedUser = { name: email.split('@')[0], role: 'user' };
+    }
+
+    console.log('[MeiHua API] Login sukses, user:', normalizedUser);
+    return { token, user: normalizedUser };
+
+  } catch (err) {
+    console.error('[MeiHua API] Login error:', err);
+    return { message: err.message };
+  }
+}
+
+export async function apiRegister(name, email, password) {
+  try {
+    const data = await apiFetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const token = extractToken(data);
+    const user  = extractUser(data);
+
+    if (!token) {
+      console.error('[MeiHua API] Register response tidak mengandung token:', data);
+      return { message: data?.message || 'Registrasi gagal: token tidak ditemukan.' };
+    }
+
+    let normalizedUser;
+    if (user && typeof user === 'object') {
+      normalizedUser = {
+        name: user.name || user.username || name,
+        role: user.role || 'user',
+      };
+    } else if (typeof user === 'string') {
+      normalizedUser = { name: user, role: 'user' };
+    } else {
+      normalizedUser = { name, role: 'user' };
+    }
+
+    console.log('[MeiHua API] Register sukses, user:', normalizedUser);
+    return { token, user: normalizedUser };
+
+  } catch (err) {
+    console.error('[MeiHua API] Register error:', err);
+    return { message: err.message };
+  }
+}
+
+export async function apiGetProducts(cat = '') {
+  try {
+    const qs   = cat ? `?cat=${encodeURIComponent(cat)}` : '';
+    const data = await apiFetch(`/products${qs}`);
+
+    const list = Array.isArray(data) ? data : (data?.data ?? data?.products ?? []);
+    console.log(`[MeiHua API] Loaded ${list.length} products`);
+    return list;
+
+  } catch (err) {
+    console.error('[MeiHua API] getProducts error:', err);
+    return [];
+  }
+}
+
+export async function apiAddProduct(productData) {
+  return apiFetch('/products', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  }).then(r => r.json());
+    headers: authHeaders(),
+    body: JSON.stringify(productData),
+  });
+}
 
-export const apiRegister = (name, email, password) =>
-  fetch(`${BASE}/auth/register`, {
+export async function apiUpdateProduct(id, productData) {
+  return apiFetch(`/products/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(productData),
+  });
+}
+
+export async function apiDeleteProduct(id) {
+  return apiFetch(`/products/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
+export async function apiGetCategories() {
+  try {
+    const data = await apiFetch('/categories');
+
+    const list = Array.isArray(data) ? data : (data?.data ?? data?.categories ?? []);
+    console.log(`[MeiHua API] Loaded ${list.length} categories`);
+    return list;
+
+  } catch (err) {
+    console.error('[MeiHua API] getCategories error:', err);
+    return [];
+  }
+}
+
+export async function apiAddCategory(categoryData) {
+  return apiFetch('/categories', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password })
-  }).then(r => r.json());
+    headers: authHeaders(),
+    body: JSON.stringify(categoryData),
+  });
+}
 
-export const apiGetProducts = (cat = '') =>
-  fetch(`${BASE}/products${cat ? `?cat=${cat}` : ''}`).then(r => r.json());
+export async function apiUpdateCategory(id, categoryData) {
+  return apiFetch(`/categories/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(categoryData),
+  });
+}
 
-export const apiAddProduct = (data) =>
-  fetch(`${BASE}/products`, {
-    method: 'POST', headers: authHeaders(), body: JSON.stringify(data)
-  }).then(r => r.json());
+export async function apiDeleteCategory(id) {
+  return apiFetch(`/categories/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
 
-export const apiUpdateProduct = (id, data) =>
-  fetch(`${BASE}/products/${id}`, {
-    method: 'PUT', headers: authHeaders(), body: JSON.stringify(data)
-  }).then(r => r.json());
+export async function apiGetOrders() {
+  try {
+    const token = getToken();
+    if (!token) {
+      console.warn('[MeiHua API] getOrders dipanggil tanpa token – skip.');
+      return [];
+    }
 
-export const apiDeleteProduct = (id) =>
-  fetch(`${BASE}/products/${id}`, {
-    method: 'DELETE', headers: authHeaders()
-  }).then(r => r.json());
+    const data = await apiFetch('/orders', {
+      headers: authHeaders(),
+    });
 
-export const apiGetCategories = () =>
-  fetch(`${BASE}/categories`).then(r => r.json());
+    const list = Array.isArray(data) ? data : (data?.data ?? data?.orders ?? []);
+    console.log(`[MeiHua API] Loaded ${list.length} orders`);
+    return list;
 
-export const apiAddCategory = (data) =>
-  fetch(`${BASE}/categories`, {
-    method: 'POST', headers: authHeaders(), body: JSON.stringify(data)
-  }).then(r => r.json());
+  } catch (err) {
+    console.error('[MeiHua API] getOrders error:', err);
+    return [];
+  }
+}
 
-export const apiUpdateCategory = (id, data) =>
-  fetch(`${BASE}/categories/${id}`, {
-    method: 'PUT', headers: authHeaders(), body: JSON.stringify(data)
-  }).then(r => r.json());
-
-export const apiDeleteCategory = (id) =>
-  fetch(`${BASE}/categories/${id}`, {
-    method: 'DELETE', headers: authHeaders()
-  }).then(r => r.json());
-
-export const apiGetOrders = () =>
-  fetch(`${BASE}/orders`, { headers: authHeaders() }).then(r => r.json());
-
-export const apiUpdateOrderStatus = (id, status) =>
-  fetch(`${BASE}/orders/${id}/status`, {
-    method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status })
-  }).then(r => r.json());
+export async function apiUpdateOrderStatus(id, status) {
+  return apiFetch(`/orders/${id}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ status }),
+  });
+}
