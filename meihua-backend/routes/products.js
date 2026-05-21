@@ -56,6 +56,7 @@ router.get('/', async (req, res) => {
 
     const result = rows.map(p => ({
       ...p,
+      oldPrice: p.old_price,
       img: p.img ? getImgUrl(req, p.img) : null,
     }));
 
@@ -73,7 +74,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Produk tidak ditemukan.' });
     }
     const p = rows[0];
-    res.json({ ...p, img: getImgUrl(req, p.img) });
+    res.json({ ...p, oldPrice: p.old_price, img: getImgUrl(req, p.img) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Gagal mengambil produk.' });

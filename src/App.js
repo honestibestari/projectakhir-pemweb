@@ -6,31 +6,49 @@ import {
   apiUpdateOrderStatus
 } from './api';
 
-
+// ─── WARNA TEMA — REFINED LUXURY WITH ROSE ACCENT ────────────────────────────
 const C = {
-  ruby:      "#B91C3A",
-  rubyDeep:  "#8B1229",
-  rubyLight: "#FFF1F3",
-  rubyGlow:  "rgba(185,28,58,0.12)",
-  jade:      "#065F46",
-  jadeLight: "#ECFDF5",
-  gold:      "#92702A",
-  goldShine: "#D4A843",
-  goldLight: "#FDF8EE",
-  ink:       "#0F0A06",
-  inkSoft:   "#2D2118",
-  stone:     "#6B5B4E",
-  fog:       "#B8A99A",
-  silk:      "#F7F3EE",
-  parchment: "#EDE8E1",
-  cream:     "#FDFAF7",
-  snow:      "#FFFFFF",
-  sapphire:  "#1D4ED8",
-  sapphireL: "#EFF6FF",
-  amber:     "#92400E",
-  amberL:    "#FFFBEB",
-  danger:    "#991B1B",
-  dangerL:   "#FEF2F2",
+  // Core brand
+  primary:     "#C8587A",
+  primaryDeep: "#A33D5C",
+  primaryLight:"#FFF5F8",
+  primaryGlow: "rgba(200,88,122,0.12)",
+  primaryMid:  "#D97F9A",
+
+  // Rose tones (more muted/professional)
+  blush:       "#EEC5D2",
+  petal:       "#F5DCEA",
+  rose:        "#FAF0F4",
+  roseDark:    "#F2E1E8",
+
+  // Neutrals — warm charcoal (not pure black)
+  ink:         "#1C1117",
+  inkSoft:     "#3A2530",
+  stone:       "#6B4D58",
+  fog:         "#A08590",
+  silk:        "#FBF6F8",
+  parchment:   "#E8D5DD",
+  cream:       "#FEF9FB",
+  snow:        "#FFFFFF",
+
+  // Accents
+  gold:        "#9A6B2A",
+  goldShine:   "#C9893C",
+  jade:        "#2A7055",
+  jadeLight:   "#EAF4EF",
+
+  // Semantic
+  sapphire:    "#1b3a88ff",
+  sapphireL:   "#EEF2FF",
+  amber:       "#8A5210",
+  amberL:      "#FFF8EE",
+  danger:      "#A01830",
+  dangerL:     "#FFF0F2",
+
+  // Sidebar BG
+  sidebarBg:   "#922546ff",
+  sidebarText: "#e2c6d0ff",
+  sidebarActive:"#C8587A",
 };
 
 const FIXED_SELLER = "MeiHua Official";
@@ -42,98 +60,107 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// ─── PERSISTENCE HELPERS ─────────────────────────────────────────────────────
+function saveLocal(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+function loadLocal(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  } catch { return fallback; }
+}
+
 async function uploadImageToServer(file) {
   const formData = new FormData();
   formData.append('image', file);
   const res = await fetch('/api/products/upload-image', {
     method: 'POST',
-    headers: authHeaders(),  
+    headers: authHeaders(),
     body: formData,
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Upload gagal');
-  return data; 
+  return data;
 }
 
+// ─── GLOBAL STYLES ───────────────────────────────────────────────────────────
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 14px; scroll-behavior: smooth; }
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       background: ${C.silk};
       color: ${C.ink};
       -webkit-font-smoothing: antialiased;
     }
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: ${C.parchment}; border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: ${C.fog}; }
+    ::-webkit-scrollbar-thumb:hover { background: ${C.blush}; }
 
-    /* TYPOGRAPHY */
     .t-display { font-family: 'Playfair Display', serif; }
     .t-display-italic { font-family: 'Playfair Display', serif; font-style: italic; }
-    .t-mono { font-family: 'Courier New', monospace; }
 
     /* BUTTONS */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       gap: 7px; border: none; border-radius: 10px; cursor: pointer;
-      font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 13px;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 13px;
       letter-spacing: .1px; transition: all .18s cubic-bezier(.4,0,.2,1);
       white-space: nowrap;
     }
     .btn:active { transform: scale(.97); }
-    .btn-ruby {
-      background: ${C.ruby}; color: ${C.snow};
-      padding: 10px 22px;
-      box-shadow: 0 2px 12px ${C.rubyGlow};
+    .btn-primary {
+      background: linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDeep} 100%);
+      color: #fff; padding: 10px 22px;
+      box-shadow: 0 3px 14px ${C.primaryGlow};
     }
-    .btn-ruby:hover { background: ${C.rubyDeep}; box-shadow: 0 4px 20px ${C.rubyGlow}; transform: translateY(-1px); }
+    .btn-primary:hover { box-shadow: 0 6px 20px ${C.primaryGlow}; transform: translateY(-1px); }
     .btn-ghost {
       background: transparent; color: ${C.inkSoft};
       padding: 9px 18px; border: 1.5px solid ${C.parchment};
     }
-    .btn-ghost:hover { border-color: ${C.ruby}; color: ${C.ruby}; background: ${C.rubyLight}; }
+    .btn-ghost:hover { border-color: ${C.primary}; color: ${C.primary}; background: ${C.primaryLight}; }
     .btn-danger-soft {
       background: ${C.dangerL}; color: ${C.danger};
-      padding: 7px 13px; border: 1.5px solid #FECACA; font-size: 12px;
+      padding: 6px 12px; border: 1.5px solid #FECACA; font-size: 12px; border-radius: 8px;
     }
-    .btn-danger-soft:hover { background: #FEE2E2; }
+    .btn-danger-soft:hover { background: #FFE4EA; }
     .btn-edit-soft {
-      background: ${C.snow}; color: ${C.ruby};
-      padding: 7px 13px; border: 1.5px solid ${C.parchment}; font-size: 12px;
+      background: ${C.snow}; color: ${C.primary};
+      padding: 6px 12px; border: 1.5px solid ${C.parchment}; font-size: 12px; border-radius: 8px;
     }
-    .btn-edit-soft:hover { border-color: ${C.ruby}; background: ${C.rubyLight}; }
-    .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+    .btn-edit-soft:hover { border-color: ${C.primary}; background: ${C.primaryLight}; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
     .btn-icon {
-      background: ${C.silk}; border: 1.5px solid ${C.parchment};
+      background: ${C.rose}; border: 1.5px solid ${C.parchment};
       color: ${C.stone}; width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
     }
-    .btn-icon:hover { border-color: ${C.ruby}; color: ${C.ruby}; background: ${C.rubyLight}; }
+    .btn-icon:hover { border-color: ${C.primary}; color: ${C.primary}; background: ${C.primaryLight}; }
 
     /* INPUTS */
     .inp {
       width: 100%; padding: 10px 14px;
-      border: 1.5px solid ${C.parchment}; border-radius: 10px;
-      font-size: 13.5px; font-family: 'Outfit', sans-serif;
+      border: 1.5px solid ${C.parchment}; border-radius: 9px;
+      font-size: 13.5px; font-family: 'Plus Jakarta Sans', sans-serif;
       color: ${C.ink}; background: ${C.snow};
       outline: none; transition: border-color .15s, box-shadow .15s;
     }
-    .inp:focus {
-      border-color: ${C.ruby};
-      box-shadow: 0 0 0 3.5px ${C.rubyGlow};
-    }
+    .inp:focus { border-color: ${C.primary}; box-shadow: 0 0 0 3px ${C.primaryGlow}; }
     .inp::placeholder { color: ${C.fog}; }
     .inp-label {
-      font-size: 11px; font-weight: 700; color: ${C.fog};
+      font-size: 11px; font-weight: 700; color: ${C.stone};
       text-transform: uppercase; letter-spacing: .7px; margin-bottom: 5px;
       display: block;
     }
     .inp-group { display: flex; flex-direction: column; }
-    select.inp { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23B8A99A' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+    select.inp { appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A08590' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px;
+    }
     textarea.inp { resize: vertical; min-height: 84px; line-height: 1.55; }
 
     /* CARD */
@@ -147,12 +174,12 @@ const GlobalStyles = () => (
     .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
     .tbl th {
       padding: 11px 16px; text-align: left;
-      font-size: 10.5px; font-weight: 700; color: ${C.fog};
-      text-transform: uppercase; letter-spacing: .7px;
+      font-size: 10px; font-weight: 700; color: ${C.fog};
+      text-transform: uppercase; letter-spacing: .8px;
       background: ${C.silk}; border-bottom: 1px solid ${C.parchment};
     }
     .tbl td {
-      padding: 13px 16px; border-bottom: 1px solid #F5F0EA;
+      padding: 13px 16px; border-bottom: 1px solid ${C.rose};
       color: ${C.stone}; vertical-align: middle;
     }
     .tbl tbody tr { transition: background .1s; }
@@ -162,71 +189,74 @@ const GlobalStyles = () => (
     /* STATUS BADGES */
     .badge {
       display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 11px; border-radius: 99px;
+      padding: 3px 10px; border-radius: 99px;
       font-size: 11px; font-weight: 700; letter-spacing: .1px;
     }
-    .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .badge-pending    { background: ${C.amberL};   color: ${C.amber}; }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .badge-pending    { background: ${C.amberL};    color: ${C.amber}; }
     .badge-dot-pending    { background: ${C.amber}; }
     .badge-processing { background: ${C.sapphireL}; color: ${C.sapphire}; }
     .badge-dot-processing { background: ${C.sapphire}; }
-    .badge-shipped    { background: #E0F2FE;        color: #0369A1; }
+    .badge-shipped    { background: #E0F2FE; color: #0369A1; }
     .badge-dot-shipped    { background: #0369A1; }
     .badge-delivered  { background: ${C.jadeLight}; color: ${C.jade}; }
     .badge-dot-delivered  { background: ${C.jade}; }
-    .badge-cancelled  { background: ${C.dangerL};  color: ${C.danger}; }
+    .badge-cancelled  { background: ${C.dangerL};   color: ${C.danger}; }
     .badge-dot-cancelled  { background: ${C.danger}; }
 
     /* PRODUCT CARD */
     .prod-card {
       background: ${C.snow}; border: 1px solid ${C.parchment};
       border-radius: 14px; overflow: hidden;
-      transition: box-shadow .25s, transform .25s;
+      transition: box-shadow .25s, transform .25s, border-color .25s;
       display: flex; flex-direction: column; cursor: pointer;
     }
     .prod-card:hover {
-      box-shadow: 0 12px 36px rgba(15,10,6,.1);
-      transform: translateY(-3px);
+      box-shadow: 0 10px 32px ${C.primaryGlow};
+      transform: translateY(-3px); border-color: ${C.blush};
     }
 
-    /* CATEGORY SIDEBAR */
+    /* STORE SIDEBAR */
     .cat-item {
       display: flex; align-items: center;
-      padding: 10px 16px; cursor: pointer;
+      padding: 9px 16px; cursor: pointer;
       font-size: 12.5px; color: ${C.stone};
-      border-left: 3px solid transparent;
+      border-left: 2px solid transparent;
       transition: all .15s; font-weight: 500;
     }
-    .cat-item:hover { background: ${C.rubyLight}; color: ${C.ruby}; }
+    .cat-item:hover { background: ${C.primaryLight}; color: ${C.primary}; }
     .cat-item.active {
-      border-left-color: ${C.ruby};
-      background: ${C.rubyLight}; color: ${C.ruby}; font-weight: 700;
+      border-left-color: ${C.primary};
+      background: ${C.primaryLight}; color: ${C.primary}; font-weight: 700;
     }
     .sub-item {
-      padding: 9px 14px; font-size: 12px; color: ${C.stone};
-      cursor: pointer; border-left: 3px solid transparent;
+      padding: 7px 14px; font-size: 12px; color: ${C.stone};
+      cursor: pointer; border-left: 2px solid transparent;
       transition: all .15s; font-weight: 500;
     }
-    .sub-item:hover { background: ${C.rubyLight}; color: ${C.ruby}; }
-    .sub-item.active { border-left-color: ${C.ruby}; background: ${C.rubyLight}; color: ${C.ruby}; font-weight: 700; }
+    .sub-item:hover { background: ${C.primaryLight}; color: ${C.primary}; }
+    .sub-item.active {
+      border-left-color: ${C.primary};
+      background: ${C.primaryLight}; color: ${C.primary}; font-weight: 700;
+    }
 
-    /* ADMIN SIDEBAR */
+    /* ADMIN SIDEBAR — dark elegant */
     .admin-nav {
       display: flex; align-items: center; gap: 10px;
-      padding: 10px 18px; cursor: pointer;
-      font-size: 13px; color: ${C.stone};
-      border-left: 3px solid transparent;
-      border-radius: 0 8px 8px 0;
-      transition: all .15s; font-weight: 500; margin: 1.5px 8px 1.5px 0;
+      padding: 10px 16px; cursor: pointer;
+      font-size: 13px; color: ${C.sidebarText};
+      border-left: 2px solid transparent;
+      transition: all .15s; font-weight: 500;
+      margin: 1px 0;
     }
-    .admin-nav:hover { background: ${C.rubyLight}; color: ${C.ruby}; }
+    .admin-nav:hover { background: rgba(200,88,122,0.12); color: #fff; }
     .admin-nav.active {
-      border-left-color: ${C.ruby};
-      background: ${C.rubyLight}; color: ${C.ruby}; font-weight: 700;
+      border-left-color: ${C.sidebarActive};
+      background: rgba(200,88,122,0.18); color: #fff; font-weight: 700;
     }
     .nav-pill {
-      margin-left: auto; background: ${C.ruby};
-      color: ${C.snow}; font-size: 10px;
+      margin-left: auto; background: ${C.primary};
+      color: #fff; font-size: 10px;
       padding: 2px 7px; border-radius: 99px; font-weight: 700;
     }
 
@@ -242,43 +272,41 @@ const GlobalStyles = () => (
       font-size: 16px; color: ${C.stone};
       cursor: pointer; font-weight: 600; flex-shrink: 0; transition: .15s;
     }
-    .qty-btn:hover { background: ${C.rubyLight}; color: ${C.ruby}; }
+    .qty-btn:hover { background: ${C.primaryLight}; color: ${C.primary}; }
     .qty-btn:first-child { border-right: 1.5px solid ${C.parchment}; }
     .qty-btn:last-child  { border-left:  1.5px solid ${C.parchment}; }
     .qty-num { flex: 1; text-align: center; font-weight: 700; font-size: 13px; }
 
     /* UPLOAD ZONE */
     .upload-zone {
-      aspect-ratio: 1; border-radius: 14px;
+      aspect-ratio: 1; border-radius: 12px;
       border: 2px dashed ${C.parchment};
-      background: ${C.silk};
+      background: ${C.rose};
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       cursor: pointer; overflow: hidden; transition: all .18s;
       position: relative;
     }
-    .upload-zone:hover { border-color: ${C.ruby}; background: ${C.rubyLight}; }
+    .upload-zone:hover { border-color: ${C.primary}; background: ${C.primaryLight}; }
     .upload-zone.has-img { border-style: solid; border-color: ${C.parchment}; }
     .upload-zone .upload-overlay {
-      position: absolute; inset: 0; background: rgba(15,10,6,.55);
+      position: absolute; inset: 0; background: rgba(28,17,23,.6);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity .18s; color: ${C.snow}; gap: 6px;
+      opacity: 0; transition: opacity .18s; color: #fff; gap: 6px;
     }
     .upload-zone:hover .upload-overlay { opacity: 1; }
 
-    /* UPLOAD PROGRESS */
     @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
     }
     .uploading-bar {
       height: 3px; border-radius: 99px;
-      background: linear-gradient(90deg, ${C.parchment} 0%, ${C.ruby} 50%, ${C.parchment} 100%);
+      background: linear-gradient(90deg, ${C.parchment} 0%, ${C.primary} 50%, ${C.parchment} 100%);
       background-size: 200%;
       animation: shimmer 1.2s infinite;
     }
 
-    /* DIVIDER */
     .divider { border: none; border-top: 1px solid ${C.parchment}; }
 
     /* STAT CARD */
@@ -286,9 +314,11 @@ const GlobalStyles = () => (
       background: ${C.snow}; border: 1px solid ${C.parchment};
       border-radius: 14px; padding: 18px 20px;
       display: flex; flex-direction: column; gap: 3px;
+      transition: box-shadow .2s, border-color .2s;
     }
+    .stat-card:hover { box-shadow: 0 6px 20px ${C.primaryGlow}; border-color: ${C.blush}; }
     .stat-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; line-height: 1.1; }
-    .stat-label { font-size: 12px; font-weight: 600; color: ${C.inkSoft}; }
+    .stat-label { font-size: 12px; font-weight: 600; color: ${C.inkSoft}; margin-top: 4px; }
     .stat-sub { font-size: 11px; color: ${C.fog}; }
 
     /* TOPBAR */
@@ -297,75 +327,115 @@ const GlobalStyles = () => (
       position: sticky; top: 0; z-index: 100; flex-shrink: 0;
     }
 
-    /* PATTERN BG for login */
-    .auth-pattern {
-      background-color: ${C.ink};
-      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23B91C3A' fill-opacity='0.08'%3E%3Cpath d='M20 20l20-20v2L22 20l18 18v2L20 22 2 40H0L20 20zm0 0L0 0h2l18 18L38 0h2L20 20zm0 0l20 20h-2L20 22 2 40H0L20 20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-
-    /* CHART bar hover */
-    .bar-seg:hover { filter: brightness(1.05); }
-
-    /* PRODUCT TAG */
     .prod-tag {
       display: inline-flex; align-items: center;
-      background: ${C.goldLight}; color: ${C.gold};
+      background: ${C.primaryLight}; color: ${C.primary};
       padding: 2px 9px; border-radius: 99px;
       font-size: 11px; font-weight: 700;
     }
 
-    /* SECTION TITLE */
     .sec-title {
       font-family: 'Playfair Display', serif;
-      font-size: 22px; font-weight: 700; color: ${C.ink};
+      font-size: 24px; font-weight: 700; color: ${C.ink};
     }
     .sec-sub { font-size: 12px; color: ${C.fog}; margin-top: 3px; }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
+      from { opacity: 0; transform: translateY(12px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .fade-up { animation: fadeUp .35s ease both; }
+    .fade-up { animation: fadeUp .3s ease both; }
+
+    .search-bar {
+      width: 100%; padding: 10px 16px 10px 40px;
+      border-radius: 99px; border: 1.5px solid ${C.parchment};
+      font-size: 13px; outline: none; font-family: 'Plus Jakarta Sans', sans-serif;
+      background: ${C.rose}; color: ${C.ink}; transition: all .15s;
+    }
+    .search-bar:focus {
+      border-color: ${C.primary}; background: ${C.snow};
+      box-shadow: 0 0 0 3px ${C.primaryGlow};
+    }
+    .search-bar::placeholder { color: ${C.fog}; }
+
+    .filter-btn {
+      padding: 6px 16px; border-radius: 99px; cursor: pointer;
+      font-size: 12px; font-weight: 600; transition: all .15s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .filter-btn-active {
+      background: linear-gradient(135deg, ${C.primary}, ${C.primaryDeep});
+      color: #fff; border: none; box-shadow: 0 3px 12px ${C.primaryGlow};
+    }
+    .filter-btn-inactive {
+      background: ${C.snow}; color: ${C.stone}; border: 1.5px solid ${C.parchment};
+    }
+    .filter-btn-inactive:hover { border-color: ${C.primary}; color: ${C.primary}; }
+
+    .bar-seg:hover { filter: brightness(1.06); }
+
+    /* Topbar admin */
+    .admin-topbar {
+      background: ${C.snow};
+      border-bottom: 1px solid ${C.parchment};
+    }
   `}</style>
 );
 
+// ─── LOGO ────────────────────────────────────────────────────────────────────
+const MHLogo = ({ size = 36 }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="mh-bg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor={C.primary}/>
+        <stop offset="100%" stopColor={C.primaryDeep}/>
+      </linearGradient>
+      <linearGradient id="mh-text" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#fff"/>
+        <stop offset="100%" stopColor={C.petal}/>
+      </linearGradient>
+    </defs>
+    <rect width="40" height="40" rx="11" fill="url(#mh-bg)"/>
+    <path d="M8 8 Q20 2 32 8" stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="none"/>
+    <path d="M7 28V14L13.5 22L20 14V28" stroke="url(#mh-text)" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    <path d="M21.5 14V28M28.5 14V28M21.5 21H28.5" stroke="url(#mh-text)" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    <circle cx="20" cy="35" r="1" fill="rgba(255,255,255,0.45)"/>
+  </svg>
+);
+
+// ─── ICONS — all PascalCase ───────────────────────────────────────────────────
 const Ic = {
-  logo: ({ size = 30 }) => (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none">
-      <rect width="36" height="36" rx="10" fill={C.ruby}/>
-      <path d="M18 7L21.5 14.5H30L23.5 19.5L26 28L18 23.5L10 28L12.5 19.5L6 14.5H14.5L18 7Z"
-        fill={C.goldShine} stroke={C.goldShine} strokeWidth=".5" strokeLinejoin="round"/>
-      <circle cx="18" cy="18" r="3.5" fill={C.snow} opacity=".9"/>
-    </svg>
-  ),
-  dash:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
-  box:     () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>,
-  order:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>,
-  tag:     () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
-  chart:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
-  cart:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
-  search:  () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
-  x:       () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>,
-  plus:    () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>,
-  edit:    () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-  trash:   () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
-  user:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-  logout:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>,
-  image:   () => <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
-  upload:  () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>,
-  star:    () => <svg width="10" height="10" viewBox="0 0 24 24" fill={C.goldShine} stroke={C.goldShine} strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  check:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
-  chevron: () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>,
-  ok:      () => <svg width="11" height="11" viewBox="0 0 24 24" fill={C.jade} stroke="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
-  warn:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-  del:     () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.danger} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  Dash:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+  Box:     () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>,
+  Order:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>,
+  Tag:     () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  Chart:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
+  Cart:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+  Search:  () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+  X:       () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>,
+  Plus:    () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>,
+  Edit:    () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  Trash:   () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  User:    () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Logout:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>,
+  Image:   () => <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+  Upload:  () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>,
+  Star:    () => <svg width="10" height="10" viewBox="0 0 24 24" fill={C.goldShine} stroke={C.goldShine} strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  Check:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>,
+  Chevron: () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>,
+  Ok:      () => <svg width="11" height="11" viewBox="0 0 24 24" fill={C.jade} stroke="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
+  Warn:    () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+  Del:     () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.danger} strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  Heart:   () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
+  Store:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
 };
 
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 function Overlay({ children, onClose }) {
   return (
-    <div
-      onClick={onClose}
-      style={{position:"fixed",inset:0,background:"rgba(10,5,3,.62)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,backdropFilter:"blur(3px)"}}
+    <div onClick={onClose}
+      style={{position:"fixed",inset:0,background:"rgba(28,17,23,.65)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20,backdropFilter:"blur(4px)"}}
     >
       <div onClick={e=>e.stopPropagation()} className="fade-up">{children}</div>
     </div>
@@ -375,18 +445,19 @@ function Overlay({ children, onClose }) {
 function ConfirmModal({ title, desc, onConfirm, onCancel, danger }) {
   return (
     <Overlay onClose={onCancel}>
-      <div style={{background:C.snow,borderRadius:18,padding:"32px 28px",width:360,textAlign:"center",boxShadow:"0 28px 72px rgba(0,0,0,.2)"}}>
-        <div style={{width:56,height:56,borderRadius:"50%",background:danger?C.dangerL:C.goldLight,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px"}}>
-          {danger ? <Ic.del/> : <Ic.warn/>}
+      <div style={{background:C.snow,borderRadius:18,padding:"32px 28px",width:360,textAlign:"center",boxShadow:"0 24px 64px rgba(28,17,23,.22)"}}>
+        <div style={{width:52,height:52,borderRadius:"50%",background:danger?C.dangerL:C.petal,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px"}}>
+          {danger ? <Ic.Del/> : <Ic.Warn/>}
         </div>
-        <h3 style={{margin:"0 0 8px",fontSize:18,color:C.ink,fontWeight:700,fontFamily:"'Playfair Display',serif"}}>{title}</h3>
+        <h3 style={{margin:"0 0 8px",fontSize:20,color:C.ink,fontWeight:700,fontFamily:"'Playfair Display',serif"}}>{title}</h3>
         <p style={{margin:"0 0 26px",fontSize:13,color:C.stone,lineHeight:1.65}}>{desc}</p>
         <div style={{display:"flex",gap:10}}>
           <button onClick={onCancel} className="btn btn-ghost" style={{flex:1,padding:11}}>Batal</button>
-          <button
-            onClick={onConfirm}
-            style={{flex:1,padding:11,borderRadius:10,border:"none",background:danger?C.danger:C.ruby,color:C.snow,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",transition:".15s"}}
-          >
+          <button onClick={onConfirm}
+            style={{flex:1,padding:11,borderRadius:10,border:"none",
+              background:danger?C.danger:`linear-gradient(135deg,${C.primary},${C.primaryDeep})`,
+              color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",
+              fontFamily:"'Plus Jakarta Sans',sans-serif",transition:".15s"}}>
             {danger ? "Ya, Hapus" : "Konfirmasi"}
           </button>
         </div>
@@ -396,6 +467,7 @@ function ConfirmModal({ title, desc, onConfirm, onCancel, danger }) {
 }
 
 const STATUS_LABEL = {pending:"Menunggu",processing:"Diproses",shipped:"Dikirim",delivered:"Selesai",cancelled:"Dibatalkan"};
+
 function StatusBadge({ status }) {
   return (
     <span className={`badge badge-${status}`}>
@@ -405,9 +477,10 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatCard({ label, value, sub, accent = C.ruby }) {
+function StatCard({ label, value, sub, accent = C.primary, icon }) {
   return (
     <div className="stat-card">
+      {icon && <div style={{marginBottom:10,opacity:.7}}>{icon}</div>}
       <p className="stat-val" style={{color:accent}}>{value}</p>
       <p className="stat-label">{label}</p>
       {sub && <p className="stat-sub">{sub}</p>}
@@ -419,101 +492,82 @@ function ImageUploadWidget({ currentUrl, onChange }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef();
-
   const handleFile = useCallback(async (file) => {
     if (!file) return;
-    setError('');
-    setUploading(true);
+    setError(''); setUploading(true);
     try {
       const result = await uploadImageToServer(file);
-      onChange(result.url); 
+      onChange(result.url);
     } catch (err) {
       setError(err.message || 'Upload gagal. Coba lagi.');
-    } finally {
-      setUploading(false);
-    }
+    } finally { setUploading(false); }
   }, [onChange]);
-
   return (
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       <span className="inp-label">Foto Produk</span>
-      <div
-        className={`upload-zone ${currentUrl ? 'has-img' : ''}`}
+      <div className={`upload-zone ${currentUrl ? 'has-img' : ''}`}
         onClick={() => !uploading && fileRef.current.click()}
-        onDragOver={e => { e.preventDefault(); }}
-        onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-      >
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}>
         {currentUrl ? (
           <>
             <img src={currentUrl} alt="preview" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
             <div className="upload-overlay">
-              <Ic.upload/>
-              <span style={{fontSize:12,fontWeight:600}}>Ganti Foto</span>
+              <Ic.Upload/><span style={{fontSize:12,fontWeight:600}}>Ganti Foto</span>
             </div>
           </>
         ) : (
-          <>
-            {uploading ? (
-              <div style={{textAlign:"center",padding:20}}>
-                <p style={{fontSize:12,color:C.fog,marginBottom:10}}>Mengupload...</p>
-                <div className="uploading-bar" style={{width:80}}/>
-              </div>
-            ) : (
-              <>
-                <div style={{color:C.fog,marginBottom:8}}><Ic.image/></div>
-                <p style={{fontSize:12,color:C.fog,fontWeight:500,textAlign:"center",lineHeight:1.5,padding:"0 10px"}}>
-                  Klik atau seret foto ke sini
-                </p>
-                <p style={{fontSize:11,color:C.parchment,marginTop:4}}>JPG, PNG, WEBP · Maks 5MB</p>
-              </>
-            )}
-          </>
+          uploading ? (
+            <div style={{textAlign:"center",padding:20}}>
+              <p style={{fontSize:12,color:C.fog,marginBottom:10}}>Mengupload...</p>
+              <div className="uploading-bar" style={{width:80}}/>
+            </div>
+          ) : (
+            <>
+              <div style={{color:C.fog,marginBottom:8}}><Ic.Image/></div>
+              <p style={{fontSize:12,color:C.fog,fontWeight:500,textAlign:"center",lineHeight:1.5,padding:"0 10px"}}>Klik atau seret foto</p>
+              <p style={{fontSize:11,color:C.blush,marginTop:4}}>JPG, PNG, WEBP · Maks 5MB</p>
+            </>
+          )
         )}
         {uploading && currentUrl && (
-          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:6,background:"rgba(15,10,6,.7)"}}>
+          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:6,background:"rgba(28,17,23,.7)"}}>
             <div className="uploading-bar"/>
           </div>
         )}
       </div>
       {error && <p style={{fontSize:11,color:C.danger,marginTop:2}}>⚠ {error}</p>}
-      <input
-        ref={fileRef} type="file" accept="image/*" style={{display:"none"}}
-        onChange={e => { const f = e.target.files[0]; if (f) handleFile(f); e.target.value = ''; }}
-      />
+      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}}
+        onChange={e => { const f = e.target.files[0]; if (f) handleFile(f); e.target.value = ''; }}/>
       {currentUrl && (
-        <button
-          onClick={() => onChange(null)}
-          className="btn btn-danger-soft btn-sm"
-          style={{width:"100%"}}
-        >
-          Hapus Foto
-        </button>
+        <button onClick={() => onChange(null)} className="btn btn-danger-soft btn-sm" style={{width:"100%"}}>Hapus Foto</button>
       )}
     </div>
   );
 }
 
+// ─── ORDER DETAIL MODAL ───────────────────────────────────────────────────────
 function OrderDetailModal({ order, onClose, onStatusChange }) {
   const statusOpts = ["pending","processing","shipped","delivered","cancelled"];
   return (
     <Overlay onClose={onClose}>
-      <div style={{background:C.snow,borderRadius:18,width:500,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 28px 72px rgba(0,0,0,.2)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 24px",borderBottom:`1px solid ${C.parchment}`}}>
+      <div style={{background:C.snow,borderRadius:18,width:500,maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(28,17,23,.22)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 24px",borderBottom:`1px solid ${C.parchment}`,background:C.silk}}>
           <div>
-            <p style={{fontSize:10.5,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".7px",margin:"0 0 4px"}}>Detail Pesanan</p>
+            <p style={{fontSize:10,fontWeight:700,color:C.stone,textTransform:"uppercase",letterSpacing:".8px",margin:"0 0 4px"}}>Detail Pesanan</p>
             <h3 style={{margin:0,fontSize:20,color:C.ink,fontWeight:700,fontFamily:"'Playfair Display',serif"}}>#{order.id}</h3>
           </div>
-          <button onClick={onClose} className="btn btn-icon"><Ic.x/></button>
+          <button onClick={onClose} className="btn btn-icon"><Ic.X/></button>
         </div>
         <div style={{padding:24,display:"flex",flexDirection:"column",gap:18}}>
-          <div style={{background:C.silk,borderRadius:12,padding:16}}>
-            <p style={{fontSize:10.5,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Informasi Pelanggan</p>
+          <div style={{background:C.rose,borderRadius:12,padding:16}}>
+            <p style={{fontSize:10,fontWeight:700,color:C.stone,textTransform:"uppercase",letterSpacing:".7px",margin:"0 0 10px"}}>Informasi Pelanggan</p>
             <p style={{fontWeight:700,color:C.ink,margin:"0 0 5px",fontSize:14}}>{order.customer}</p>
             <p style={{fontSize:12,color:C.fog,margin:"0 0 3px"}}>Telp: {order.phone}</p>
             <p style={{fontSize:12,color:C.fog,margin:0}}>Alamat: {order.address}</p>
           </div>
           <div>
-            <p style={{fontSize:10.5,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Item Pesanan</p>
+            <p style={{fontSize:10,fontWeight:700,color:C.stone,textTransform:"uppercase",letterSpacing:".7px",margin:"0 0 10px"}}>Item Pesanan</p>
             {order.items.map((it,i)=>(
               <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:i<order.items.length-1?`1px solid ${C.parchment}`:"none"}}>
                 <div>
@@ -525,20 +579,20 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
             ))}
             <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:`2px solid ${C.parchment}`}}>
               <span style={{fontWeight:700,fontSize:14,color:C.ink}}>Total</span>
-              <span style={{fontWeight:700,fontSize:17,color:C.ruby}}>{fmt(order.total)}</span>
+              <span style={{fontWeight:700,fontSize:17,color:C.primary}}>{fmt(order.total)}</span>
             </div>
           </div>
           <div>
-            <p style={{fontSize:10.5,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".6px",margin:"0 0 10px"}}>Ubah Status</p>
+            <p style={{fontSize:10,fontWeight:700,color:C.stone,textTransform:"uppercase",letterSpacing:".7px",margin:"0 0 10px"}}>Ubah Status</p>
             <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
               {statusOpts.map(s=>(
                 <button key={s} onClick={()=>onStatusChange(order.id,s)} style={{
                   padding:"7px 15px",borderRadius:99,
-                  border:`1.5px solid ${order.status===s?C.ruby:C.parchment}`,
-                  background:order.status===s?C.ruby:C.snow,
-                  color:order.status===s?C.snow:C.stone,
+                  border:`1.5px solid ${order.status===s?C.primary:C.parchment}`,
+                  background:order.status===s?`linear-gradient(135deg,${C.primary},${C.primaryDeep})`:C.snow,
+                  color:order.status===s?"#fff":C.stone,
                   fontSize:12,fontWeight:600,cursor:"pointer",
-                  fontFamily:"'Outfit',sans-serif",transition:".15s"
+                  fontFamily:"'Plus Jakarta Sans',sans-serif",transition:".15s"
                 }}>
                   {STATUS_LABEL[s]}
                 </button>
@@ -551,23 +605,31 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
   );
 }
 
+// ─── ORDERS PANEL ─────────────────────────────────────────────────────────────
 function OrdersPanel({ orders, setOrders }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
 
+  const filtered = orders.filter(o => {
+    const matchStatus = filter === "all" || o.status === filter;
+    const q = search.toLowerCase().trim();
+    const matchSearch = !q ||
+      o.id.toLowerCase().includes(q) ||
+      o.customer.toLowerCase().includes(q) ||
+      (o.phone && o.phone.includes(q)) ||
+      (o.address && o.address.toLowerCase().includes(q));
+    return matchStatus && matchSearch;
+  });
+
   const counts = {
-    all:orders.length,
-    pending:orders.filter(o=>o.status==="pending").length,
-    processing:orders.filter(o=>o.status==="processing").length,
-    shipped:orders.filter(o=>o.status==="shipped").length,
-    delivered:orders.filter(o=>o.status==="delivered").length,
-    cancelled:orders.filter(o=>o.status==="cancelled").length,
+    all: orders.length,
+    pending: orders.filter(o=>o.status==="pending").length,
+    processing: orders.filter(o=>o.status==="processing").length,
+    shipped: orders.filter(o=>o.status==="shipped").length,
+    delivered: orders.filter(o=>o.status==="delivered").length,
+    cancelled: orders.filter(o=>o.status==="cancelled").length,
   };
-  const filtered = orders.filter(o=>
-    (filter==="all"||o.status===filter) &&
-    (o.id.toLowerCase().includes(search.toLowerCase())||o.customer.toLowerCase().includes(search.toLowerCase()))
-  );
   const revenue = orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+o.total,0);
 
   const changeStatus = async (id, status) => {
@@ -576,7 +638,10 @@ function OrdersPanel({ orders, setOrders }) {
     setSelected(prev=>prev?{...prev,status}:prev);
   };
 
-  const filterBtns = [["all","Semua"],["pending","Menunggu"],["processing","Diproses"],["shipped","Dikirim"],["delivered","Selesai"],["cancelled","Dibatalkan"]];
+  const filterBtns = [
+    ["all","Semua"],["pending","Menunggu"],["processing","Diproses"],
+    ["shipped","Dikirim"],["delivered","Selesai"],["cancelled","Dibatalkan"]
+  ];
 
   return (
     <div style={{padding:26,flex:1,overflowY:"auto"}}>
@@ -586,35 +651,31 @@ function OrdersPanel({ orders, setOrders }) {
           <p className="sec-sub">{orders.length} total pesanan</p>
         </div>
         <div style={{position:"relative"}}>
-          <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:C.fog,pointerEvents:"none"}}><Ic.search/></span>
-          <input className="inp" placeholder="Cari ID atau nama..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:230,paddingLeft:36}}/>
+          <span style={{position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:C.fog,pointerEvents:"none"}}><Ic.Search/></span>
+          <input className="search-bar" placeholder="Cari ID, nama, atau alamat..." value={search}
+            onChange={e=>setSearch(e.target.value)} style={{width:260}}/>
         </div>
       </div>
-
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
-        <StatCard label="Total Pendapatan" value={fmt(revenue)} sub="Pesanan selesai" accent={C.ruby}/>
+        <StatCard label="Total Pendapatan" value={fmt(revenue)} sub="Pesanan selesai" accent={C.primary}/>
         <StatCard label="Pesanan Baru" value={counts.pending} sub="Menunggu konfirmasi" accent={C.amber}/>
         <StatCard label="Dalam Proses" value={counts.processing+counts.shipped} sub="Diproses & dikirim" accent={C.sapphire}/>
         <StatCard label="Pesanan Selesai" value={counts.delivered} sub="Berhasil terkirim" accent={C.jade}/>
       </div>
-
       <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
         {filterBtns.map(([k,v])=>(
-          <button key={k} onClick={()=>setFilter(k)} style={{
-            padding:"6px 15px",borderRadius:99,
-            border:`1.5px solid ${filter===k?C.ruby:C.parchment}`,
-            background:filter===k?C.ruby:C.snow,
-            color:filter===k?C.snow:C.stone,
-            fontSize:12,fontWeight:600,cursor:"pointer",
-            fontFamily:"'Outfit',sans-serif",transition:".15s",
-            display:"inline-flex",alignItems:"center",gap:5
-          }}>
+          <button key={k} onClick={()=>setFilter(k)}
+            className={`filter-btn ${filter===k?"filter-btn-active":"filter-btn-inactive"}`}>
             {v}
-            {counts[k]>0&&<span style={{background:filter===k?"rgba(255,255,255,.25)":"#EDE8E1",borderRadius:99,padding:"0 6px",fontSize:11}}>{counts[k]}</span>}
+            {counts[k]>0&&<span style={{background:filter===k?"rgba(255,255,255,.25)":C.rose,borderRadius:99,padding:"0 6px",fontSize:11}}>{counts[k]}</span>}
           </button>
         ))}
       </div>
-
+      {search && (
+        <p style={{fontSize:12,color:C.fog,marginBottom:12}}>
+          Menampilkan <strong style={{color:C.primary}}>{filtered.length}</strong> hasil untuk "{search}"
+        </p>
+      )}
       <div className="card">
         <table className="tbl">
           <thead>
@@ -623,13 +684,13 @@ function OrdersPanel({ orders, setOrders }) {
           <tbody>
             {filtered.length===0 && (
               <tr><td colSpan={7} style={{textAlign:"center",padding:52,color:C.fog}}>
-                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke={C.parchment} strokeWidth="1.5" style={{display:"block",margin:"0 auto 10px"}}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                Tidak ada pesanan
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={C.parchment} strokeWidth="1.5" style={{display:"block",margin:"0 auto 10px"}}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                {search ? `Tidak ada pesanan untuk "${search}"` : "Tidak ada pesanan"}
               </td></tr>
             )}
             {filtered.map(o=>(
               <tr key={o.id}>
-                <td><span style={{fontWeight:700,color:C.ruby,fontSize:12}}>#{o.id}</span></td>
+                <td><span style={{fontWeight:700,color:C.primary,fontSize:12}}>#{o.id}</span></td>
                 <td>
                   <p style={{fontWeight:600,color:C.ink,margin:"0 0 2px",fontSize:13}}>{o.customer}</p>
                   <p style={{fontSize:11,color:C.fog,margin:0}}>{o.phone}</p>
@@ -649,6 +710,7 @@ function OrdersPanel({ orders, setOrders }) {
   );
 }
 
+// ─── PRODUCTS PANEL ───────────────────────────────────────────────────────────
 function ProductsPanel({ products, setProducts, categories }) {
   const [view, setView] = useState("list");
   const [editTarget, setEditTarget] = useState(null);
@@ -656,7 +718,6 @@ function ProductsPanel({ products, setProducts, categories }) {
   const [imgUrl, setImgUrl] = useState(null);
   const emptyForm = { name:"", cat:categories[0]?.id||"", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" };
   const [form, setForm] = useState(emptyForm);
-
   const resetForm = () => { setForm(emptyForm); setImgUrl(null); setEditTarget(null); };
   const openEdit = (p) => {
     setEditTarget(p);
@@ -664,20 +725,19 @@ function ProductsPanel({ products, setProducts, categories }) {
     setImgUrl(p.img || null);
     setView("edit");
   };
-
   const handleSave = async () => {
     if (!form.name || !form.price) { alert("Nama dan harga wajib diisi!"); return; }
     const data = {
-      name: form.name, cat: form.cat,
-      price: Number(form.price),
-      old_price: form.oldPrice ? Number(form.oldPrice) : null,
-      discount: form.discount ? Number(form.discount) : null,
-      img: imgUrl,  
-      rating: Number(form.rating),
-      sold: form.sold, seller: FIXED_SELLER,
+      name:form.name, cat:form.cat,
+      price:Number(form.price),
+      old_price:form.oldPrice?Number(form.oldPrice):null,
+      discount:form.discount?Number(form.discount):null,
+      img:imgUrl,
+      rating:Number(form.rating),
+      sold:form.sold, seller:FIXED_SELLER,
     };
     try {
-      if (view === "add") {
+      if (view==="add") {
         const res = await apiAddProduct(data);
         if (res.id) setProducts(prev=>[...prev,{...data,id:res.id,oldPrice:data.old_price,img:res.img||imgUrl}]);
       } else {
@@ -691,7 +751,7 @@ function ProductsPanel({ products, setProducts, categories }) {
   if (view==="add"||view==="edit") {
     return (
       <div style={{flex:1,overflowY:"auto"}}>
-        <div style={{background:C.snow,borderBottom:`1px solid ${C.parchment}`,padding:"18px 26px"}}>
+        <div style={{background:C.silk,borderBottom:`1px solid ${C.parchment}`,padding:"18px 26px"}}>
           <h2 className="sec-title">{view==="add"?"Tambah Produk Baru":"Edit Produk"}</h2>
           {view==="edit"&&<p className="sec-sub">{editTarget?.name}</p>}
         </div>
@@ -712,7 +772,7 @@ function ProductsPanel({ products, setProducts, categories }) {
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Nama Toko</label>
-                  <input className="inp" value={FIXED_SELLER} readOnly style={{background:C.silk,color:C.fog,cursor:"not-allowed"}}/>
+                  <input className="inp" value={FIXED_SELLER} readOnly style={{background:C.rose,color:C.fog,cursor:"not-allowed"}}/>
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Harga Jual (Rp) *</label>
@@ -733,7 +793,7 @@ function ProductsPanel({ products, setProducts, categories }) {
               </div>
               <div style={{display:"flex",gap:10,marginTop:4}}>
                 <button onClick={()=>{setView("list");resetForm();}} className="btn btn-ghost" style={{padding:"11px 22px"}}>Batal</button>
-                <button onClick={handleSave} className="btn btn-ruby" style={{flex:1,padding:11}}>
+                <button onClick={handleSave} className="btn btn-primary" style={{flex:1,padding:11}}>
                   {view==="add"?"Simpan Produk":"Update Produk"}
                 </button>
               </div>
@@ -751,10 +811,10 @@ function ProductsPanel({ products, setProducts, categories }) {
           <h2 className="sec-title">Manajemen Produk</h2>
           <p className="sec-sub">{products.length} produk terdaftar</p>
         </div>
-        <button onClick={()=>{resetForm();setView("add");}} className="btn btn-ruby"><Ic.plus/> Tambah Produk</button>
+        <button onClick={()=>{resetForm();setView("add");}} className="btn btn-primary"><Ic.Plus/> Tambah Produk</button>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
-        <StatCard label="Total Produk" value={products.length} accent={C.ruby}/>
+        <StatCard label="Total Produk" value={products.length} accent={C.primary}/>
         <StatCard label="Ada Diskon" value={products.filter(p=>p.discount).length} accent={C.danger}/>
         <StatCard label="Ada Foto" value={products.filter(p=>p.img).length} accent={C.jade}/>
         <StatCard label="Kategori" value={categories.length} accent={C.sapphire}/>
@@ -769,24 +829,24 @@ function ProductsPanel({ products, setProducts, categories }) {
             {products.map(p=>(
               <tr key={p.id}>
                 <td>
-                  <div style={{width:44,height:44,borderRadius:10,background:C.silk,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${C.parchment}`}}>
-                    {p.img ? <img src={p.img} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/> : <span style={{color:C.parchment}}><Ic.image/></span>}
+                  <div style={{width:44,height:44,borderRadius:10,background:C.rose,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${C.parchment}`}}>
+                    {p.img ? <img src={p.img} style={{width:"100%",height:"100%",objectFit:"cover"}} alt=""/> : <span style={{color:C.parchment,fontSize:18}}>🌸</span>}
                   </div>
                 </td>
                 <td>
                   <p style={{fontWeight:600,color:C.ink,margin:"0 0 3px",fontSize:13}}>{p.name}</p>
-                  <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:11,color:C.jade,fontWeight:600}}><Ic.ok/> {p.seller}</span>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:11,color:C.jade,fontWeight:600}}><Ic.Ok/> {p.seller}</span>
                 </td>
                 <td>
-                  <p style={{fontWeight:700,color:C.ruby,margin:"0 0 2px",fontSize:13}}>{fmt(p.price)}</p>
+                  <p style={{fontWeight:700,color:C.primary,margin:"0 0 2px",fontSize:13}}>{fmt(p.price)}</p>
                   {p.discount && <span style={{fontSize:10.5,color:C.danger,background:C.dangerL,padding:"1px 7px",borderRadius:5,fontWeight:700}}>−{p.discount}%</span>}
                 </td>
                 <td><span className="prod-tag">{categories.find(c=>c.id===p.cat)?.label||p.cat}</span></td>
-                <td><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontSize:12,color:C.ink}}><Ic.star/> {p.rating}</span></td>
+                <td><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontSize:12,color:C.ink}}><Ic.Star/> {p.rating}</span></td>
                 <td>
                   <div style={{display:"flex",gap:6}}>
-                    <button onClick={()=>openEdit(p)} className="btn btn-edit-soft btn-sm"><Ic.edit/> Edit</button>
-                    <button onClick={()=>setDeleteTarget(p)} className="btn btn-danger-soft btn-sm"><Ic.trash/> Hapus</button>
+                    <button onClick={()=>openEdit(p)} className="btn btn-edit-soft btn-sm"><Ic.Edit/> Edit</button>
+                    <button onClick={()=>setDeleteTarget(p)} className="btn btn-danger-soft btn-sm"><Ic.Trash/> Hapus</button>
                   </div>
                 </td>
               </tr>
@@ -796,14 +856,9 @@ function ProductsPanel({ products, setProducts, categories }) {
       </div>
       {deleteTarget && (
         <ConfirmModal
-          title="Hapus produk ini?"
-          desc={`"${deleteTarget.name}" akan dihapus secara permanen termasuk fotonya.`}
-          danger
-          onConfirm={async()=>{
-            await apiDeleteProduct(deleteTarget.id);
-            setProducts(prev=>prev.filter(p=>p.id!==deleteTarget.id));
-            setDeleteTarget(null);
-          }}
+          title="Hapus produk ini?" danger
+          desc={`"${deleteTarget.name}" akan dihapus secara permanen.`}
+          onConfirm={async()=>{ await apiDeleteProduct(deleteTarget.id); setProducts(prev=>prev.filter(p=>p.id!==deleteTarget.id)); setDeleteTarget(null); }}
           onCancel={()=>setDeleteTarget(null)}
         />
       )}
@@ -811,18 +866,18 @@ function ProductsPanel({ products, setProducts, categories }) {
   );
 }
 
+// ─── CATEGORIES PANEL ─────────────────────────────────────────────────────────
 function CategoriesPanel({ categories, setCategories }) {
   const [view, setView] = useState("list");
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form, setForm] = useState({ label:"", subsRaw:"" });
   const [err, setErr] = useState("");
-
   const openEdit = (cat) => { setEditTarget(cat); setForm({label:cat.label,subsRaw:cat.subs.join(", ")}); setErr(""); setView("edit"); };
   const handleSave = async () => {
     const label = form.label.trim();
     if (!label) { setErr("Nama kategori wajib diisi."); return; }
-    const id = label.toLowerCase().replace(/\s+/g, "-");
+    const id = label.toLowerCase().replace(/\s+/g,"-");
     if (view==="add"&&categories.find(c=>c.id===id)) { setErr("Kategori dengan nama ini sudah ada."); return; }
     const subs = form.subsRaw.split(",").map(s=>s.trim()).filter(Boolean);
     try {
@@ -854,7 +909,7 @@ function CategoriesPanel({ categories, setCategories }) {
           </div>
           <div style={{display:"flex",gap:10}}>
             <button onClick={()=>{setView("list");setErr("");}} className="btn btn-ghost" style={{padding:"10px 22px"}}>Batal</button>
-            <button onClick={handleSave} className="btn btn-ruby" style={{flex:1,padding:10}}>
+            <button onClick={handleSave} className="btn btn-primary" style={{flex:1,padding:10}}>
               {view==="add"?"Simpan Kategori":"Update Kategori"}
             </button>
           </div>
@@ -867,7 +922,7 @@ function CategoriesPanel({ categories, setCategories }) {
     <div style={{padding:26,flex:1,overflowY:"auto"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
         <div><h2 className="sec-title">Manajemen Kategori</h2><p className="sec-sub">{categories.length} kategori aktif</p></div>
-        <button onClick={()=>{setForm({label:"",subsRaw:""});setErr("");setView("add");}} className="btn btn-ruby"><Ic.plus/> Tambah Kategori</button>
+        <button onClick={()=>{setForm({label:"",subsRaw:""});setErr("");setView("add");}} className="btn btn-primary"><Ic.Plus/> Tambah Kategori</button>
       </div>
       <div className="card">
         <table className="tbl">
@@ -877,7 +932,7 @@ function CategoriesPanel({ categories, setCategories }) {
             {categories.map(cat=>(
               <tr key={cat.id}>
                 <td style={{fontWeight:700,color:C.ink,fontSize:13}}>{cat.label}</td>
-                <td><code style={{background:C.silk,color:C.fog,padding:"2px 9px",borderRadius:6,fontSize:11}}>{cat.id}</code></td>
+                <td><code style={{background:C.rose,color:C.stone,padding:"2px 9px",borderRadius:6,fontSize:11}}>{cat.id}</code></td>
                 <td>
                   {cat.subs.length===0
                     ? <span style={{color:C.parchment,fontStyle:"italic",fontSize:12}}>Tidak ada</span>
@@ -888,8 +943,8 @@ function CategoriesPanel({ categories, setCategories }) {
                 </td>
                 <td>
                   <div style={{display:"flex",gap:6}}>
-                    <button onClick={()=>openEdit(cat)} className="btn btn-edit-soft btn-sm"><Ic.edit/> Edit</button>
-                    <button onClick={()=>setDeleteTarget(cat)} className="btn btn-danger-soft btn-sm"><Ic.trash/> Hapus</button>
+                    <button onClick={()=>openEdit(cat)} className="btn btn-edit-soft btn-sm"><Ic.Edit/> Edit</button>
+                    <button onClick={()=>setDeleteTarget(cat)} className="btn btn-danger-soft btn-sm"><Ic.Trash/> Hapus</button>
                   </div>
                 </td>
               </tr>
@@ -899,14 +954,9 @@ function CategoriesPanel({ categories, setCategories }) {
       </div>
       {deleteTarget && (
         <ConfirmModal
-          title="Hapus kategori?"
+          title="Hapus kategori?" danger
           desc={`Kategori "${deleteTarget.label}" akan dihapus permanen.`}
-          danger
-          onConfirm={async()=>{
-            await apiDeleteCategory(deleteTarget.id);
-            setCategories(prev=>prev.filter(c=>c.id!==deleteTarget.id));
-            setDeleteTarget(null);
-          }}
+          onConfirm={async()=>{ await apiDeleteCategory(deleteTarget.id); setCategories(prev=>prev.filter(c=>c.id!==deleteTarget.id)); setDeleteTarget(null); }}
           onCancel={()=>setDeleteTarget(null)}
         />
       )}
@@ -914,11 +964,30 @@ function CategoriesPanel({ categories, setCategories }) {
   );
 }
 
+// ─── SALES REPORT PANEL ───────────────────────────────────────────────────────
 function SalesReportPanel({ orders, products, categories }) {
-  const delivered = orders.filter(o=>o.status==="delivered");
+  const [reportPeriod, setReportPeriod] = useState("all");
+  const now = new Date();
+  const filteredByPeriod = orders.filter(o => {
+    if (reportPeriod === "all") return true;
+    const orderDate = new Date(o.date || o.created_at);
+    if (reportPeriod === "today") return orderDate.toDateString() === now.toDateString();
+    if (reportPeriod === "week") {
+      const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+      return orderDate >= weekAgo;
+    }
+    if (reportPeriod === "month") {
+      return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+
+  const delivered = filteredByPeriod.filter(o=>o.status==="delivered");
+  const cancelled = filteredByPeriod.filter(o=>o.status==="cancelled");
   const totalRevenue = delivered.reduce((s,o)=>s+o.total,0);
   const avgOrder = delivered.length>0 ? Math.round(totalRevenue/delivered.length) : 0;
-  const conversionRate = orders.length>0 ? Math.round((delivered.length/orders.length)*100) : 0;
+  const conversionRate = filteredByPeriod.length>0 ? Math.round((delivered.length/filteredByPeriod.length)*100) : 0;
+  const cancelRate = filteredByPeriod.length>0 ? Math.round((cancelled.length/filteredByPeriod.length)*100) : 0;
 
   const catRevenue = {};
   delivered.forEach(o=>o.items.forEach(it=>{
@@ -930,25 +999,40 @@ function SalesReportPanel({ orders, products, categories }) {
   const maxCat = catData[0]?catData[0][1]:1;
 
   const prodRevenue = {};
-  delivered.forEach(o=>o.items.forEach(it=>{prodRevenue[it.name]=(prodRevenue[it.name]||0)+it.price*it.qty;}));
+  const prodQty = {};
+  delivered.forEach(o=>o.items.forEach(it=>{
+    prodRevenue[it.name]=(prodRevenue[it.name]||0)+it.price*it.qty;
+    prodQty[it.name]=(prodQty[it.name]||0)+it.qty;
+  }));
   const topProds = Object.entries(prodRevenue).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
   const months = ["Okt","Nov","Des","Jan","Feb","Mar","Apr"];
   const monthlyRevenue = [1850000,2340000,3120000,2780000,3450000,2950000,totalRevenue||4200000];
   const maxMonth = Math.max(...monthlyRevenue);
-  const PALETTE = [C.ruby,"#7c3aed","#0891b2",C.jade,"#d97706","#dc2626"];
+  const PALETTE = [C.primary,"#7c3aed","#0891b2",C.jade,"#d97706","#dc2626"];
+  const periodBtns = [["all","Semua Waktu"],["month","Bulan Ini"],["week","7 Hari"],["today","Hari Ini"]];
 
   return (
     <div style={{padding:26,flex:1,overflowY:"auto"}}>
-      <div style={{marginBottom:22}}>
-        <h2 className="sec-title">Laporan Penjualan</h2>
-        <p className="sec-sub">Ringkasan performa toko MeiHua Official</p>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
+        <div>
+          <h2 className="sec-title">Laporan Penjualan</h2>
+          <p className="sec-sub">Ringkasan performa toko MeiHua Official</p>
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          {periodBtns.map(([k,v])=>(
+            <button key={k} onClick={()=>setReportPeriod(k)}
+              className={`filter-btn ${reportPeriod===k?"filter-btn-active":"filter-btn-inactive"}`}>
+              {v}
+            </button>
+          ))}
+        </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:22}}>
-        <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Pesanan selesai" accent={C.ruby}/>
-        <StatCard label="Total Pesanan" value={orders.length} sub="Semua status" accent="#7c3aed"/>
+        <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Pesanan selesai" accent={C.primary}/>
+        <StatCard label="Total Pesanan" value={filteredByPeriod.length} sub="Semua status" accent="#7c3aed"/>
         <StatCard label="Rata-rata Pesanan" value={fmt(avgOrder)} sub="Per transaksi" accent={C.sapphire}/>
-        <StatCard label="Tingkat Selesai" value={`${conversionRate}%`} sub="dari total pesanan" accent={C.jade}/>
+        <StatCard label="Tingkat Selesai" value={`${conversionRate}%`} sub={`Dibatalkan: ${cancelRate}%`} accent={C.jade}/>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1.7fr 1fr",gap:16,marginBottom:16}}>
         <div className="card card-pad">
@@ -960,10 +1044,12 @@ function SalesReportPanel({ orders, products, categories }) {
               const isLast = i===monthlyRevenue.length-1;
               return (
                 <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
-                  {isLast&&<p style={{fontSize:10,color:C.ruby,fontWeight:700,margin:0,whiteSpace:"nowrap"}}>{fmt(val)}</p>}
+                  {isLast&&<p style={{fontSize:10,color:C.primary,fontWeight:700,margin:0,whiteSpace:"nowrap"}}>{fmt(val)}</p>}
                   {!isLast&&<p style={{fontSize:10,color:"transparent",margin:0}}>x</p>}
-                  <div className="bar-seg" style={{width:"100%",height:`${h}px`,background:isLast?C.ruby:C.parchment,borderRadius:"6px 6px 0 0",transition:".3s",cursor:"pointer"}}/>
-                  <p style={{fontSize:11,color:isLast?C.ruby:C.fog,margin:0,fontWeight:isLast?700:400}}>{months[i]}</p>
+                  <div className="bar-seg" style={{width:"100%",height:`${h}px`,
+                    background:isLast?`linear-gradient(to top, ${C.primaryDeep}, ${C.primary})`:C.parchment,
+                    borderRadius:"6px 6px 0 0",transition:".3s",cursor:"pointer"}}/>
+                  <p style={{fontSize:11,color:isLast?C.primary:C.fog,margin:0,fontWeight:isLast?700:400}}>{months[i]}</p>
                 </div>
               );
             })}
@@ -981,8 +1067,9 @@ function SalesReportPanel({ orders, products, categories }) {
                       <span style={{fontSize:12,fontWeight:600,color:C.ink}}>{cat}</span>
                       <span style={{fontSize:12,fontWeight:700,color:PALETTE[i%PALETTE.length]}}>{fmt(rev)}</span>
                     </div>
-                    <div style={{height:6,background:C.silk,borderRadius:99,overflow:"hidden"}}>
-                      <div style={{height:"100%",width:`${Math.round((rev/maxCat)*100)}%`,background:PALETTE[i%PALETTE.length],borderRadius:99,transition:".4s"}}/>
+                    <div style={{height:5,background:C.silk,borderRadius:99,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${Math.round((rev/maxCat)*100)}%`,
+                        background:PALETTE[i%PALETTE.length],borderRadius:99,transition:".4s"}}/>
                     </div>
                   </div>
                 ))}
@@ -991,27 +1078,34 @@ function SalesReportPanel({ orders, products, categories }) {
         </div>
       </div>
       <div className="card">
-        <div style={{padding:"16px 20px",borderBottom:`1px solid ${C.parchment}`}}>
+        <div style={{padding:"16px 20px",borderBottom:`1px solid ${C.parchment}`,background:C.silk}}>
           <p style={{fontWeight:700,fontSize:14,color:C.ink,margin:0,fontFamily:"'Playfair Display',serif"}}>Produk Terlaris</p>
         </div>
         {topProds.length===0
           ? <p style={{color:C.fog,fontSize:13,textAlign:"center",padding:32}}>Belum ada data</p>
           : <table className="tbl">
-              <thead><tr><th style={{width:40}}>#</th><th>Produk</th><th>Pendapatan</th><th>Porsi</th></tr></thead>
+              <thead><tr><th style={{width:40}}>#</th><th>Produk</th><th>Qty Terjual</th><th>Pendapatan</th><th>Porsi</th></tr></thead>
               <tbody>
                 {topProds.map(([name,rev],i)=>(
                   <tr key={name}>
                     <td>
-                      <span style={{width:26,height:26,borderRadius:"50%",background:i===0?C.goldLight:i===1?"#F1F5F9":C.silk,display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,color:i===0?C.gold:C.fog}}>{i+1}</span>
+                      <span style={{width:26,height:26,borderRadius:"50%",
+                        background:i===0?C.petal:i===1?C.rose:C.silk,
+                        display:"inline-flex",alignItems:"center",justifyContent:"center",
+                        fontWeight:700,fontSize:12,color:i===0?C.primary:C.fog}}>{i+1}</span>
                     </td>
                     <td style={{fontWeight:600,color:C.ink,fontSize:13}}>{name}</td>
-                    <td><span style={{fontWeight:700,color:C.ruby}}>{fmt(rev)}</span></td>
+                    <td style={{fontSize:12,color:C.stone,fontWeight:600}}>{prodQty[name]||0} pcs</td>
+                    <td><span style={{fontWeight:700,color:C.primary}}>{fmt(rev)}</span></td>
                     <td>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <div style={{flex:1,height:5,background:C.silk,borderRadius:99,overflow:"hidden"}}>
-                          <div style={{height:"100%",width:`${Math.round((rev/(topProds[0][1]||1))*100)}%`,background:C.ruby,borderRadius:99}}/>
+                        <div style={{flex:1,height:4,background:C.silk,borderRadius:99,overflow:"hidden"}}>
+                          <div style={{height:"100%",width:`${Math.round((rev/(topProds[0][1]||1))*100)}%`,
+                            background:`linear-gradient(to right, ${C.primary}, ${C.primaryDeep})`,borderRadius:99}}/>
                         </div>
-                        <span style={{fontSize:12,fontWeight:600,color:C.fog,minWidth:34}}>{Math.round((rev/(topProds[0][1]||1))*100)}%</span>
+                        <span style={{fontSize:12,fontWeight:600,color:C.fog,minWidth:34}}>
+                          {Math.round((rev/(topProds[0][1]||1))*100)}%
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -1024,57 +1118,66 @@ function SalesReportPanel({ orders, products, categories }) {
   );
 }
 
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ products, setProducts, categories, setCategories, orders, setOrders, user, onClose }) {
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState(() => loadLocal('meihua_admin_tab', 'dashboard'));
   const pendingCount = orders.filter(o=>o.status==="pending").length;
   const totalRevenue = orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+o.total,0);
   const deliveredCount = orders.filter(o=>o.status==="delivered").length;
 
+  // Persist admin tab
+  const setTabPersist = (t) => { setTab(t); saveLocal('meihua_admin_tab', t); };
+
   const navItems = [
-    {key:"dashboard",label:"Dashboard",icon:<Ic.dash/>},
-    {key:"products",label:"Produk",icon:<Ic.box/>},
-    {key:"orders",label:"Pesanan",icon:<Ic.order/>,badge:pendingCount||null},
-    {key:"categories",label:"Kategori",icon:<Ic.tag/>},
-    {key:"reports",label:"Laporan",icon:<Ic.chart/>},
+    {key:"dashboard",label:"Dashboard",icon:<Ic.Dash/>},
+    {key:"products",label:"Produk",icon:<Ic.Box/>},
+    {key:"orders",label:"Pesanan",icon:<Ic.Order/>,badge:pendingCount||null},
+    {key:"categories",label:"Kategori",icon:<Ic.Tag/>},
+    {key:"reports",label:"Laporan",icon:<Ic.Chart/>},
   ];
 
   return (
     <div style={{height:"100vh",display:"flex",flexDirection:"column",background:C.silk,overflow:"hidden"}}>
       {/* Top Bar */}
-      <div className="topbar" style={{padding:"12px 26px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <Ic.logo size={36}/>
+      <div className="admin-topbar" style={{padding:"11px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:11}}>
+          <MHLogo size={36}/>
           <div>
-            <p style={{margin:0,fontSize:15,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>MeiHua Official</p>
-            <p style={{margin:0,fontSize:11,color:C.fog}}>Admin Dashboard</p>
+            <p style={{margin:0,fontSize:14,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>MeiHua Official</p>
+            <p style={{margin:0,fontSize:10,color:C.fog,letterSpacing:".5px"}}>Admin Dashboard</p>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{textAlign:"right"}}>
             <p style={{margin:0,fontSize:13,fontWeight:600,color:C.ink}}>{user}</p>
-            <p style={{margin:0,fontSize:11,color:C.fog}}>Administrator</p>
+            <p style={{margin:0,fontSize:10,color:C.fog}}>Administrator</p>
           </div>
-          <div style={{width:36,height:36,borderRadius:"50%",background:C.goldLight,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:C.gold,border:`2px solid ${C.parchment}`}}>
+          <div style={{width:34,height:34,borderRadius:"50%",
+            background:`linear-gradient(135deg,${C.primary},${C.primaryDeep})`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontWeight:700,fontSize:13,color:"#fff"}}>
             {user?.charAt(0).toUpperCase()}
           </div>
-          <button onClick={onClose} className="btn btn-ghost" style={{fontSize:12}}>Lihat Toko</button>
+          <button onClick={onClose} className="btn btn-ghost" style={{fontSize:12,gap:5}}>
+            <Ic.Store/> Lihat Toko
+          </button>
         </div>
       </div>
 
       <div style={{display:"flex",flex:1,overflow:"hidden"}}>
-        {/* Sidebar */}
-        <div style={{width:224,background:C.snow,borderRight:`1px solid ${C.parchment}`,display:"flex",flexDirection:"column",flexShrink:0}}>
-          <div style={{padding:"16px 18px 8px"}}>
-            <p style={{fontSize:10,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".9px",margin:0}}>Navigasi</p>
+        {/* Dark Sidebar */}
+        <div style={{width:214,background:C.sidebarBg,display:"flex",flexDirection:"column",flexShrink:0}}>
+          <div style={{padding:"16px 16px 8px"}}>
+            <p style={{fontSize:10,fontWeight:700,color:"rgba(255, 255, 255, 0.45)",textTransform:"uppercase",letterSpacing:"1px",margin:0}}>Menu Utama</p>
           </div>
           {navItems.map(n=>(
-            <div key={n.key} className={`admin-nav ${tab===n.key?"active":""}`} onClick={()=>setTab(n.key)}>
+            <div key={n.key} className={`admin-nav ${tab===n.key?"active":""}`} onClick={()=>setTabPersist(n.key)}>
               {n.icon}{n.label}
               {n.badge&&<span className="nav-pill">{n.badge}</span>}
             </div>
           ))}
-          <div style={{marginTop:"auto",padding:"14px 18px",borderTop:`1px solid ${C.parchment}`}}>
-            <p style={{fontSize:10.5,color:C.fog,margin:0}}>MeiHua v2.0 · 2025</p>
+          <div style={{marginTop:"auto",padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,.06)"}}>
+            <p style={{fontSize:11,color:"rgba(221, 190, 201, 0.35)",margin:0}}>MeiHua © 2026</p>
           </div>
         </div>
 
@@ -1082,25 +1185,29 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
         <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column"}}>
           {tab==="dashboard" && (
             <div style={{padding:26}}>
-              <h2 className="sec-title" style={{marginBottom:4}}>Selamat datang, {user} 👋</h2>
+              <h2 className="sec-title" style={{marginBottom:4}}>Selamat datang, {user} 🌸</h2>
               <p className="sec-sub" style={{marginBottom:22}}>Ringkasan performa toko Anda</p>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:26}}>
-                <StatCard label="Total Produk" value={products.length} sub="Produk aktif" accent={C.ruby}/>
+                <StatCard label="Total Produk" value={products.length} sub="Produk aktif" accent={C.primary}/>
                 <StatCard label="Pesanan Masuk" value={orders.length} sub="Semua status" accent="#7c3aed"/>
                 <StatCard label="Pesanan Selesai" value={deliveredCount} sub="Terkirim" accent={C.jade}/>
-                <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Dari pesanan selesai" accent={C.gold}/>
+                <StatCard label="Total Pendapatan" value={fmt(totalRevenue)} sub="Pesanan selesai" accent={C.gold}/>
               </div>
               <div className="card">
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${C.parchment}`}}>
-                  <p style={{fontWeight:700,fontSize:14,color:C.ink,margin:0,fontFamily:"'Playfair Display',serif"}}>Pesanan Terbaru</p>
-                  <button onClick={()=>setTab("orders")} style={{fontSize:12,color:C.ruby,fontWeight:600,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Lihat semua →</button>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                  padding:"16px 20px",borderBottom:`1px solid ${C.parchment}`,background:C.silk}}>
+                  <p style={{fontWeight:700,fontSize:16,color:C.ink,margin:0,fontFamily:"'Playfair Display',serif"}}>Pesanan Terbaru</p>
+                  <button onClick={()=>setTabPersist("orders")}
+                    style={{fontSize:14,color:C.primary,fontWeight:600,background:"none",border:"none",cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                    Lihat semua
+                  </button>
                 </div>
                 <table className="tbl">
                   <thead><tr><th>ID</th><th>Pelanggan</th><th>Total</th><th>Status</th></tr></thead>
                   <tbody>
                     {orders.slice(0,5).map(o=>(
                       <tr key={o.id}>
-                        <td style={{fontWeight:700,color:C.ruby,fontSize:12}}>#{o.id}</td>
+                        <td style={{fontWeight:700,color:C.primary,fontSize:12}}>#{o.id}</td>
                         <td style={{fontWeight:600,color:C.ink,fontSize:13}}>{o.customer}</td>
                         <td style={{fontWeight:700,color:C.ink}}>{fmt(o.total)}</td>
                         <td><StatusBadge status={o.status}/></td>
@@ -1121,47 +1228,70 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
   );
 }
 
-function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout }) {
+// ─── TOP NAVBAR (STORE) ───────────────────────────────────────────────────────
+function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout, searchQuery, setSearchQuery }) {
   return (
-    <div className="topbar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 26px"}}>
+    <div className="topbar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 24px"}}>
       <div style={{display:"flex",alignItems:"center",gap:11}}>
-        <Ic.logo size={34}/>
+        <MHLogo size={34}/>
         <div>
-          <span style={{fontSize:17,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif",letterSpacing:".2px"}}>
-            MeiHua <span style={{color:C.ruby}}>Official</span>
+          <span style={{fontSize:16,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif",letterSpacing:".2px"}}>
+            MeiHua <span style={{color:C.primary}}>Official</span>
           </span>
-          <p style={{margin:0,fontSize:10,color:C.goldShine,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase"}}>Fine Jewelry</p>
+          <p style={{margin:0,fontSize:9.5,color:C.primaryMid,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase"}}>Fine Jewelry</p>
         </div>
       </div>
-
-      <div style={{position:"relative",width:"37%"}}>
-        <span style={{position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:C.fog,pointerEvents:"none"}}><Ic.search/></span>
-        <input placeholder="Cari produk perhiasan..." style={{width:"100%",padding:"10px 16px 10px 38px",borderRadius:99,border:`1.5px solid ${C.parchment}`,fontSize:13,outline:"none",fontFamily:"'Outfit',sans-serif",background:C.silk,color:C.ink,transition:".15s"}}
-          onFocus={e=>e.target.style.borderColor=C.ruby} onBlur={e=>e.target.style.borderColor=C.parchment}
+      <div style={{position:"relative",width:"36%"}}>
+        <span style={{position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:C.fog,pointerEvents:"none"}}><Ic.Search/></span>
+        <input
+          className="search-bar"
+          placeholder="Cari produk perhiasan..."
+          value={searchQuery}
+          onChange={e=>setSearchQuery(e.target.value)}
         />
+        {searchQuery && (
+          <button onClick={()=>setSearchQuery("")}
+            style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:C.fog,display:"flex",alignItems:"center",padding:2}}>
+            <Ic.X/>
+          </button>
+        )}
       </div>
-
       <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        <button onClick={openCart} style={{position:"relative",background:"none",border:"none",cursor:"pointer",padding:9,display:"flex",alignItems:"center",color:C.stone,borderRadius:10,transition:".15s"}}
-          onMouseEnter={e=>e.currentTarget.style.background=C.silk} onMouseLeave={e=>e.currentTarget.style.background="none"}
-        >
-          <Ic.cart/>
-          {cartCount>0&&<span style={{position:"absolute",top:3,right:3,background:C.ruby,color:C.snow,borderRadius:"50%",width:17,height:17,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700}}>{cartCount}</span>}
+        <button onClick={openCart}
+          style={{position:"relative",background:"none",border:"none",cursor:"pointer",padding:9,
+            display:"flex",alignItems:"center",color:C.stone,borderRadius:10,transition:".15s"}}
+          onMouseEnter={e=>e.currentTarget.style.background=C.rose}
+          onMouseLeave={e=>e.currentTarget.style.background="none"}>
+          <Ic.Cart/>
+          {cartCount>0&&<span style={{position:"absolute",top:3,right:3,background:C.primary,color:"#fff",
+            borderRadius:"50%",width:17,height:17,display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:10,fontWeight:700}}>{cartCount}</span>}
         </button>
         {!user ? (
           <>
             <button className="btn btn-ghost" onClick={()=>openAuth("login")}>Masuk</button>
-            <button className="btn btn-ruby" onClick={()=>openAuth("register")}>Daftar</button>
+            <button className="btn btn-primary" onClick={()=>openAuth("register")}>Daftar</button>
           </>
         ) : (
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:33,height:33,borderRadius:"50%",background:C.goldLight,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color:C.gold,border:`2px solid ${C.parchment}`}}>
+            <div style={{width:32,height:32,borderRadius:"50%",
+              background:`linear-gradient(135deg,${C.primary},${C.primaryDeep})`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontWeight:700,fontSize:13,color:"#fff"}}>
               {user.charAt(0).toUpperCase()}
             </div>
             <span style={{fontSize:13,fontWeight:600,color:C.ink}}>{user}</span>
-            <button onClick={openAdmin} style={{background:C.goldLight,color:C.gold,border:`1.5px solid ${C.parchment}`,borderRadius:99,padding:"6px 15px",fontSize:12,cursor:"pointer",fontWeight:700,fontFamily:"'Outfit',sans-serif",transition:".15s"}}>Admin</button>
-            <button onClick={onLogout} style={{background:"none",border:"none",color:C.fog,fontSize:12,cursor:"pointer",padding:"6px 8px",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4}}>
-              <Ic.logout/>Keluar
+            <button onClick={openAdmin}
+              style={{background:C.primaryLight,color:C.primaryDeep,border:`1.5px solid ${C.parchment}`,
+                borderRadius:99,padding:"6px 14px",fontSize:12,cursor:"pointer",fontWeight:700,
+                fontFamily:"'Plus Jakarta Sans',sans-serif",transition:".15s"}}>
+              Admin
+            </button>
+            <button onClick={onLogout}
+              style={{background:"none",border:"none",color:C.fog,fontSize:12,cursor:"pointer",
+                padding:"6px 8px",fontFamily:"'Plus Jakarta Sans',sans-serif",
+                display:"flex",alignItems:"center",gap:4}}>
+              <Ic.Logout/>Keluar
             </button>
           </div>
         )}
@@ -1170,42 +1300,52 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout })
   );
 }
 
-function ProductGrid({ products, cart, addToCart, removeFromCart }) {
+// ─── PRODUCT GRID ─────────────────────────────────────────────────────────────
+function ProductGrid({ products, cart, addToCart, removeFromCart, searchQuery }) {
   if (products.length===0) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:300,color:C.fog,gap:10}}>
-      <Ic.search/>
-      <p style={{fontSize:14,fontWeight:600,marginTop:8}}>Produk tidak ditemukan</p>
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:320,color:C.fog,gap:10}}>
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={C.parchment} strokeWidth="1.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <p style={{fontSize:15,fontWeight:600,marginTop:8,color:C.stone}}>
+        {searchQuery ? `Tidak ada produk untuk "${searchQuery}"` : "Produk tidak ditemukan"}
+      </p>
+      {searchQuery && <p style={{fontSize:12,color:C.fog}}>Coba kata kunci yang berbeda</p>}
     </div>
   );
   return (
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(165px,1fr))",gap:14}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(168px,1fr))",gap:14}}>
       {products.map(p=>{
         const item = cart.find(i=>i.id===p.id);
         return (
           <div key={p.id} className="prod-card">
-            <div style={{height:164,position:"relative",overflow:"hidden",background:C.silk,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              {p.discount && <div style={{position:"absolute",top:8,left:8,background:C.ruby,color:C.snow,fontSize:11,padding:"3px 9px",borderRadius:6,fontWeight:700,zIndex:1}}>−{p.discount}%</div>}
+            <div style={{height:168,position:"relative",overflow:"hidden",background:C.rose,flexShrink:0,
+              display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {p.discount && (
+                <div style={{position:"absolute",top:8,left:8,background:C.danger,color:"#fff",
+                  fontSize:11,padding:"3px 9px",borderRadius:6,fontWeight:700,zIndex:1}}>
+                  −{p.discount}%
+                </div>
+              )}
               {p.img
                 ? <img src={p.img} alt="produk" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                : <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,color:C.parchment}}>
-                    <Ic.image/>
+                : <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,color:C.blush}}>
+                    <span style={{fontSize:32}}>🌸</span>
                     <p style={{fontSize:11,color:C.fog,margin:0}}>Belum ada foto</p>
                   </div>
               }
             </div>
             <div style={{padding:"13px 13px 15px",display:"flex",flexDirection:"column",flex:1}}>
               <p style={{fontSize:12.5,margin:"0 0 7px",color:C.ink,lineHeight:1.4,height:36,overflow:"hidden",fontWeight:500}}>{p.name}</p>
-              <p style={{color:C.ruby,fontWeight:700,fontSize:14,margin:"0 0 2px"}}>{fmt(p.price)}</p>
+              <p style={{color:C.primary,fontWeight:700,fontSize:14,margin:"0 0 2px"}}>{fmt(p.price)}</p>
               <div style={{height:17,marginBottom:6}}>
                 {p.oldPrice && <span style={{textDecoration:"line-through",color:C.fog,fontSize:11}}>{fmt(p.oldPrice)}</span>}
               </div>
               <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4}}>
-                <Ic.star/>
-                <span style={{fontSize:11,color:C.fog}}>{p.rating} · {p.sold} terjual</span>
+                <Ic.Star/><span style={{fontSize:11,color:C.fog}}>{p.rating} · {p.sold} terjual</span>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:3,marginBottom:11}}>
-                <Ic.ok/>
-                <span style={{fontSize:11,color:C.jade,fontWeight:600}}>{p.seller}</span>
+                <Ic.Ok/><span style={{fontSize:11,color:C.jade,fontWeight:600}}>{p.seller}</span>
               </div>
               <div style={{marginTop:"auto"}}>
                 {item ? (
@@ -1215,9 +1355,14 @@ function ProductGrid({ products, cart, addToCart, removeFromCart }) {
                     <button className="qty-btn" onClick={()=>addToCart(p)}>+</button>
                   </div>
                 ) : (
-                  <button onClick={()=>addToCart(p)} style={{width:"100%",padding:"9px",background:C.ruby,color:C.snow,border:"none",borderRadius:9,fontWeight:600,cursor:"pointer",fontSize:12,fontFamily:"'Outfit',sans-serif",transition:".15s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background=C.rubyDeep} onMouseLeave={e=>e.currentTarget.style.background=C.ruby}
-                  >
+                  <button onClick={()=>addToCart(p)}
+                    style={{width:"100%",padding:"9px",
+                      background:`linear-gradient(135deg,${C.primary},${C.primaryDeep})`,
+                      color:"#fff",border:"none",borderRadius:9,fontWeight:600,cursor:"pointer",
+                      fontSize:12,fontFamily:"'Plus Jakarta Sans',sans-serif",transition:".15s",
+                      boxShadow:`0 2px 10px ${C.primaryGlow}`}}
+                    onMouseEnter={e=>e.currentTarget.style.transform="scale(1.02)"}
+                    onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
                     + Keranjang
                   </button>
                 )}
@@ -1230,19 +1375,24 @@ function ProductGrid({ products, cart, addToCart, removeFromCart }) {
   );
 }
 
+// ─── CART POPUP ───────────────────────────────────────────────────────────────
 function CartPopup({ cart, close, remove }) {
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   return (
     <>
-      <div onClick={close} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.3)",zIndex:998,backdropFilter:"blur(2px)"}}/>
-      <div style={{position:"fixed",top:0,right:0,width:370,height:"100vh",background:C.snow,boxShadow:"-4px 0 36px rgba(0,0,0,.12)",zIndex:999,display:"flex",flexDirection:"column"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 22px",borderBottom:`1px solid ${C.parchment}`}}>
-          <h3 style={{margin:0,fontSize:17,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>Keranjang Belanja</h3>
-          <button onClick={close} className="btn btn-icon"><Ic.x/></button>
+      <div onClick={close} style={{position:"fixed",inset:0,background:"rgba(28,17,23,.45)",zIndex:998,backdropFilter:"blur(2px)"}}/>
+      <div style={{position:"fixed",top:0,right:0,width:370,height:"100vh",background:C.snow,
+        boxShadow:`-4px 0 32px rgba(28,17,23,.12)`,zIndex:999,display:"flex",flexDirection:"column"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+          padding:"20px 22px",borderBottom:`1px solid ${C.parchment}`,background:C.silk}}>
+          <h3 style={{margin:0,fontSize:18,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>
+            Keranjang Belanja
+          </h3>
+          <button onClick={close} className="btn btn-icon"><Ic.X/></button>
         </div>
         {cart.length===0 ? (
           <div style={{textAlign:"center",marginTop:90,color:C.fog,padding:22}}>
-            <Ic.cart/>
+            <span style={{fontSize:44}}>🛍️</span>
             <p style={{fontSize:15,marginTop:16,fontWeight:600,color:C.stone}}>Keranjang masih kosong</p>
             <p style={{fontSize:12,color:C.fog,marginTop:5}}>Tambahkan produk perhiasan pilihan Anda</p>
           </div>
@@ -1250,8 +1400,10 @@ function CartPopup({ cart, close, remove }) {
           <>
             <div style={{flex:1,overflowY:"auto",padding:"18px 22px"}}>
               {cart.map(item=>(
-                <div key={item.id} style={{display:"flex",justifyContent:"space-between",marginBottom:16,paddingBottom:16,borderBottom:`1px solid ${C.parchment}`,gap:12}}>
-                  {item.img && <img src={item.img} alt="" style={{width:44,height:44,borderRadius:9,objectFit:"cover",border:`1px solid ${C.parchment}`,flexShrink:0}}/>}
+                <div key={item.id} style={{display:"flex",justifyContent:"space-between",marginBottom:16,
+                  paddingBottom:16,borderBottom:`1px solid ${C.parchment}`,gap:12}}>
+                  {item.img && <img src={item.img} alt="" style={{width:46,height:46,borderRadius:9,
+                    objectFit:"cover",border:`1px solid ${C.parchment}`,flexShrink:0}}/>}
                   <div style={{flex:1}}>
                     <p style={{fontSize:13,fontWeight:600,color:C.ink,margin:"0 0 4px"}}>{item.name}</p>
                     <p style={{fontSize:12,color:C.fog,margin:0}}>{item.qty} × {fmt(item.price)}</p>
@@ -1260,12 +1412,14 @@ function CartPopup({ cart, close, remove }) {
                 </div>
               ))}
             </div>
-            <div style={{padding:"18px 22px",borderTop:`1px solid ${C.parchment}`}}>
+            <div style={{padding:"18px 22px",borderTop:`1px solid ${C.parchment}`,background:C.rose}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
                 <span style={{fontWeight:600,color:C.stone}}>Total</span>
-                <span style={{fontWeight:700,fontSize:18,color:C.ruby}}>{fmt(total)}</span>
+                <span style={{fontWeight:700,fontSize:18,color:C.primary}}>{fmt(total)}</span>
               </div>
-              <button className="btn btn-ruby" style={{width:"100%",padding:13,fontSize:13,borderRadius:10}}>Checkout Sekarang</button>
+              <button className="btn btn-primary" style={{width:"100%",padding:13,fontSize:13,borderRadius:10}}>
+                Checkout Sekarang
+              </button>
             </div>
           </>
         )}
@@ -1274,6 +1428,7 @@ function CartPopup({ cart, close, remove }) {
   );
 }
 
+// ─── AUTH MODAL ───────────────────────────────────────────────────────────────
 function AuthModal({ close, setUser, mode, onLogin }) {
   const [isLogin, setIsLogin] = useState(mode==="login");
   const [name, setName] = useState("");
@@ -1298,7 +1453,7 @@ function AuthModal({ close, setUser, mode, onLogin }) {
         localStorage.setItem('meihua_role', userRole);
         localStorage.setItem('meihua_name', userName);
         setUser(userName); onLogin(); close();
-      } else { setErr(res?.message||'Terjadi kesalahan. Cek console untuk detail.'); }
+      } else { setErr(res?.message||'Terjadi kesalahan.'); }
     } catch (error) {
       console.error('[AuthModal]', error);
       setErr('Tidak dapat terhubung ke server.');
@@ -1307,22 +1462,22 @@ function AuthModal({ close, setUser, mode, onLogin }) {
 
   return (
     <Overlay onClose={close}>
-      <div style={{background:C.snow,borderRadius:20,width:390,overflow:"hidden",boxShadow:"0 32px 80px rgba(0,0,0,.22)"}}>
-        {/* Header strip */}
-        <div style={{background:C.ruby,padding:"28px 32px 26px",textAlign:"center",position:"relative"}}>
-          <div style={{position:"absolute",inset:0,opacity:.07,backgroundImage:"repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)",backgroundSize:"12px 12px"}}/>
-          <Ic.logo size={46}/>
-          <h2 style={{margin:"14px 0 4px",fontSize:22,color:C.snow,fontWeight:700,fontFamily:"'Playfair Display',serif"}}>
+      <div style={{background:C.snow,borderRadius:20,width:390,overflow:"hidden",boxShadow:"0 28px 72px rgba(28,17,23,.25)"}}>
+        <div style={{background:`linear-gradient(135deg, ${C.primary} 0%, ${C.primaryDeep} 100%)`,
+          padding:"28px 32px 26px",textAlign:"center",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",inset:0,opacity:.08,
+            backgroundImage:"repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)",
+            backgroundSize:"12px 12px"}}/>
+          <MHLogo size={46}/>
+          <h2 style={{margin:"14px 0 4px",fontSize:22,color:"#fff",fontWeight:700,fontFamily:"'Playfair Display',serif"}}>
             {isLogin?"Selamat Datang":"Buat Akun Baru"}
           </h2>
-          <p style={{margin:0,fontSize:12,color:"rgba(255,255,255,.7)"}}>MeiHua Official</p>
+          <p style={{margin:0,fontSize:12,color:"rgba(255,255,255,.75)"}}>MeiHua Official</p>
         </div>
-
-        <div style={{padding:"28px 32px"}}>
+        <div style={{padding:"26px 32px 28px",background:C.snow}}>
           {err && (
-            <div style={{background:C.dangerL,border:`1px solid #FECACA`,borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:13,color:C.danger}}>
-              {err}
-            </div>
+            <div style={{background:C.dangerL,border:`1px solid #FECACA`,borderRadius:9,
+              padding:"10px 14px",marginBottom:14,fontSize:13,color:C.danger}}>{err}</div>
           )}
           <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:12}}>
             {!isLogin && (
@@ -1333,7 +1488,7 @@ function AuthModal({ close, setUser, mode, onLogin }) {
               value={email} onChange={e=>setEmail(e.target.value)} required disabled={loading}/>
             <input className="inp" placeholder="Password" type="password"
               value={password} onChange={e=>setPassword(e.target.value)} required disabled={loading}/>
-            <button type="submit" className="btn btn-ruby"
+            <button type="submit" className="btn btn-primary"
               disabled={loading}
               style={{width:"100%",padding:13,fontSize:13,borderRadius:10,marginTop:4,opacity:loading?.7:1}}>
               {loading?"Memproses...":(isLogin?"Masuk ke Akun":"Daftar Sekarang")}
@@ -1342,7 +1497,7 @@ function AuthModal({ close, setUser, mode, onLogin }) {
           <hr className="divider" style={{margin:"20px 0"}}/>
           <p style={{textAlign:"center",fontSize:13,color:C.fog,margin:0}}>
             {isLogin?"Belum punya akun?":"Sudah punya akun?"}{" "}
-            <span style={{color:C.ruby,cursor:"pointer",fontWeight:700}}
+            <span style={{color:C.primary,cursor:"pointer",fontWeight:700}}
               onClick={()=>{setIsLogin(!isLogin);setErr("");}}>
               {isLogin?"Daftar disini":"Masuk"}
             </span>
@@ -1353,24 +1508,39 @@ function AuthModal({ close, setUser, mode, onLogin }) {
   );
 }
 
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [cart, setCart] = useState([]);
+  // ── Persistent state: restore from localStorage ──
+  const [user, setUser] = useState(() => localStorage.getItem('meihua_name') || null);
+  const [cart, setCart] = useState(() => loadLocal('meihua_cart', []));
+  const [adminMode, setAdminMode] = useState(() => loadLocal('meihua_admin_mode', false));
+  const [activeCategory, setActiveCategory] = useState(() => loadLocal('meihua_active_cat', null));
+  const [activeSub, setActiveSub] = useState(() => loadLocal('meihua_active_sub', null));
+  const [searchQuery, setSearchQuery] = useState(() => loadLocal('meihua_search', ''));
+
   const [showCart, setShowCart] = useState(false);
   const [showAuth, setShowAuth] = useState(null);
-  const [adminMode, setAdminMode] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [activeSub, setActiveSub] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ── Persist cart to localStorage whenever it changes ──
+  useEffect(() => { saveLocal('meihua_cart', cart); }, [cart]);
+
+  // ── Persist navigation state ──
+  useEffect(() => { saveLocal('meihua_admin_mode', adminMode); }, [adminMode]);
+  useEffect(() => { saveLocal('meihua_active_cat', activeCategory); }, [activeCategory]);
+  useEffect(() => { saveLocal('meihua_active_sub', activeSub); }, [activeSub]);
+  useEffect(() => { saveLocal('meihua_search', searchQuery); }, [searchQuery]);
+
+  // ── Initial data fetch ──
   useEffect(() => {
     const token = localStorage.getItem('meihua_token');
     const savedName = localStorage.getItem('meihua_name');
     if (token && savedName) setUser(savedName);
+
     async function fetchPublicData() {
       setLoading(true);
       try {
@@ -1383,6 +1553,7 @@ export default function App() {
     fetchPublicData();
   }, []);
 
+  // ── Fetch orders when user is logged in ──
   useEffect(() => {
     if (!user) return;
     if (!localStorage.getItem('meihua_token')) return;
@@ -1396,14 +1567,34 @@ export default function App() {
   });
   const removeFromCart = (id) => setCart(prev=>prev.map(i=>i.id===id?{...i,qty:i.qty-1}:i).filter(i=>i.qty>0));
 
-  const filteredProducts = activeCategory ? products.filter(p=>p.cat===activeCategory.id) : products;
+  // ── Filter products ──
   const activeCatData = categories.find(c=>c.id===activeCategory?.id);
+  const filteredProducts = products.filter(p => {
+    if (activeCategory && p.cat !== activeCategory.id) return false;
+    if (activeSub !== null && activeCatData) {
+      const subName = activeCatData.subs[activeSub]?.toLowerCase();
+      if (subName && !p.name.toLowerCase().includes(subName) && !(p.cat && p.cat.toLowerCase().includes(subName))) {
+        const keywords = subName.split(" ");
+        const match = keywords.some(kw => p.name.toLowerCase().includes(kw));
+        if (!match) return false;
+      }
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return p.name.toLowerCase().includes(q) ||
+             (p.seller && p.seller.toLowerCase().includes(q)) ||
+             (p.cat && p.cat.toLowerCase().includes(q)) ||
+             (categories.find(c=>c.id===p.cat)?.label||"").toLowerCase().includes(q);
+    }
+    return true;
+  });
 
   if (loading) return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.silk}}>
       <div style={{textAlign:"center"}}>
-        <Ic.logo size={52}/>
-        <p style={{marginTop:16,color:C.fog,fontSize:13,fontFamily:"'Outfit',sans-serif"}}>Memuat data…</p>
+        <MHLogo size={52}/>
+        <p style={{marginTop:16,color:C.fog,fontSize:13,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Memuat data MeiHua…</p>
+        <div className="uploading-bar" style={{width:120,margin:"12px auto 0"}}/>
       </div>
     </div>
   );
@@ -1419,8 +1610,11 @@ export default function App() {
           openAuth={m=>setShowAuth(m)}
           openAdmin={()=>setAdminMode(true)}
           onLogout={()=>setShowLogout(true)}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
       )}
+
       {user&&adminMode ? (
         <AdminPanel
           products={products} setProducts={setProducts}
@@ -1429,45 +1623,98 @@ export default function App() {
           user={user} onClose={()=>setAdminMode(false)}
         />
       ) : (
-        <div style={{display:"flex",height:"calc(100vh - 62px)",overflow:"hidden"}}>
+        <div style={{display:"flex",height:"calc(100vh - 60px)",overflow:"hidden"}}>
           {/* Category Sidebar */}
-          <div style={{width:122,background:C.snow,flexShrink:0,borderRight:`1px solid ${C.parchment}`,padding:"12px 0",overflowY:"auto"}}>
-            <div className={`cat-item ${!activeCategory?"active":""}`} onClick={()=>{setActiveCategory(null);setActiveSub(null);}}>Semua</div>
+          <div style={{width:128,background:C.snow,flexShrink:0,borderRight:`1px solid ${C.parchment}`,padding:"10px 0",overflowY:"auto"}}>
+            <div style={{padding:"7px 16px 9px",borderBottom:`1px solid ${C.parchment}`,marginBottom:4}}>
+              <p style={{fontSize:9.5,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".8px",margin:0}}>Kategori</p>
+            </div>
+            <div className={`cat-item ${!activeCategory?"active":""}`}
+              onClick={()=>{ setActiveCategory(null); setActiveSub(null); setSearchQuery(""); }}>
+              Semua
+            </div>
             {categories.map(cat=>(
               <div key={cat.id} className={`cat-item ${activeCategory?.id===cat.id?"active":""}`}
                 onClick={()=>{
-                  if(activeCategory?.id===cat.id){setActiveCategory(null);setActiveSub(null);}
-                  else{setActiveCategory(cat);setActiveSub(null);}
+                  if(activeCategory?.id===cat.id){ setActiveCategory(null); setActiveSub(null); }
+                  else{ setActiveCategory(cat); setActiveSub(null); }
+                  setSearchQuery("");
                 }}>
                 {cat.label}
               </div>
             ))}
           </div>
 
-          {/* Submenu */}
-          <div style={{width:activeCategory?150:0,overflow:"hidden",background:"#F9F6F2",borderRight:`1px solid ${C.parchment}`,transition:"width .22s ease",flexShrink:0}}>
+          {/* Sub-category Sidebar */}
+          <div style={{width:activeCatData?152:0,overflow:"hidden",background:C.primaryLight,
+            borderRight:`1px solid ${C.parchment}`,transition:"width .22s ease",flexShrink:0}}>
             {activeCatData && (
-              <div style={{width:150,padding:"12px 0"}}>
-                <div style={{fontSize:10,fontWeight:700,color:C.ruby,padding:"6px 14px 9px",textTransform:"uppercase",letterSpacing:".8px",borderBottom:`1px solid ${C.parchment}`,marginBottom:4}}>{activeCatData.label}</div>
+              <div style={{width:152,padding:"10px 0"}}>
+                <div style={{fontSize:9.5,fontWeight:700,color:C.primary,padding:"6px 14px 8px",
+                  textTransform:"uppercase",letterSpacing:".8px",borderBottom:`1px solid ${C.parchment}`,marginBottom:4}}>
+                  {activeCatData.label}
+                </div>
+                <div className={`sub-item ${activeSub===null?"active":""}`} onClick={()=>setActiveSub(null)}>
+                  Semua {activeCatData.label}
+                </div>
                 {activeCatData.subs.map((sub,i)=>(
-                  <div key={i} className={`sub-item ${activeSub===i?"active":""}`} onClick={()=>setActiveSub(activeSub===i?null:i)}>{sub}</div>
+                  <div key={i}
+                    className={`sub-item ${activeSub===i?"active":""}`}
+                    onClick={()=>setActiveSub(activeSub===i?null:i)}>
+                    {sub}
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Products */}
+          {/* Products Area */}
           <div style={{flex:1,overflowY:"auto",padding:18}}>
-            <div style={{fontSize:11.5,color:C.fog,marginBottom:13,display:"flex",alignItems:"center",gap:5}}>
-              <span style={{cursor:"pointer",color:!activeCategory?C.ruby:C.fog,fontWeight:600}} onClick={()=>{setActiveCategory(null);setActiveSub(null);}}>Semua Produk</span>
-              {activeCategory&&<><span style={{color:C.parchment}}><Ic.chevron/></span><span style={{color:activeSub===null?C.ruby:C.fog,cursor:"pointer",fontWeight:600}} onClick={()=>setActiveSub(null)}>{activeCategory.label}</span></>}
-              {activeSub!==null&&activeCatData&&<><span style={{color:C.parchment}}><Ic.chevron/></span><span style={{color:C.ruby,fontWeight:600}}>{activeCatData.subs[activeSub]}</span></>}
+            {/* Breadcrumb */}
+            <div style={{fontSize:11.5,color:C.fog,marginBottom:13,display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+              <span style={{cursor:"pointer",color:!activeCategory?C.primary:C.fog,fontWeight:600}}
+                onClick={()=>{ setActiveCategory(null); setActiveSub(null); setSearchQuery(""); }}>
+                Semua Produk
+              </span>
+              {activeCategory&&(
+                <>
+                  <span style={{color:C.parchment}}><Ic.Chevron/></span>
+                  <span style={{color:activeSub===null?C.primary:C.fog,cursor:"pointer",fontWeight:600}}
+                    onClick={()=>setActiveSub(null)}>{activeCategory.label}</span>
+                </>
+              )}
+              {activeSub!==null&&activeCatData&&(
+                <>
+                  <span style={{color:C.parchment}}><Ic.Chevron/></span>
+                  <span style={{color:C.primary,fontWeight:600}}>{activeCatData.subs[activeSub]}</span>
+                </>
+              )}
+              {searchQuery&&(
+                <>
+                  <span style={{color:C.parchment}}><Ic.Chevron/></span>
+                  <span style={{color:C.primary,fontWeight:600}}>Hasil: "{searchQuery}"</span>
+                </>
+              )}
             </div>
+
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <h2 style={{margin:0,fontSize:16,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>{activeCategory?activeCategory.label:"Semua Produk"}</h2>
-              <span style={{fontSize:12,color:C.fog}}>{filteredProducts.length} produk</span>
+              <h2 style={{margin:0,fontSize:18,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>
+                {searchQuery ? `Hasil pencarian` :
+                  activeSub!==null&&activeCatData ? activeCatData.subs[activeSub] :
+                  activeCategory ? activeCategory.label : "Semua Produk"}
+              </h2>
+              <span style={{fontSize:12,color:C.fog,background:C.rose,padding:"4px 12px",borderRadius:99,fontWeight:600}}>
+                {filteredProducts.length} produk
+              </span>
             </div>
-            <ProductGrid products={filteredProducts} cart={cart} addToCart={addToCart} removeFromCart={removeFromCart}/>
+
+            <ProductGrid
+              products={filteredProducts}
+              cart={cart}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              searchQuery={searchQuery}
+            />
           </div>
         </div>
       )}
@@ -1482,7 +1729,9 @@ export default function App() {
             localStorage.removeItem('meihua_token');
             localStorage.removeItem('meihua_role');
             localStorage.removeItem('meihua_name');
+            localStorage.removeItem('meihua_admin_mode');
             setUser(null); setAdminMode(false); setShowLogout(false);
+            setCart([]);
           }}
           onCancel={()=>setShowLogout(false)}
         />
