@@ -120,8 +120,8 @@ const GlobalStyles = () => (
     .card { background: ${C.snow}; border: 1px solid ${C.parchment}; border-radius: 14px; overflow: hidden; }
     .card-pad { padding: 20px; }
 
-    .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .tbl th { padding: 11px 16px; text-align: left; font-size: 10px; font-weight: 700; color: ${C.fog}; text-transform: uppercase; letter-spacing: .8px; background: ${C.silk}; border-bottom: 1px solid ${C.parchment}; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 15px; }
+    .tbl th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: ${C.fog}; text-transform: uppercase; letter-spacing: .8px; background: ${C.silk}; border-bottom: 1px solid ${C.parchment}; }
     .tbl td { padding: 13px 16px; border-bottom: 1px solid ${C.rose}; color: ${C.stone}; vertical-align: middle; }
     .tbl tbody tr { transition: background .1s; }
     .tbl tbody tr:hover td { background: ${C.silk}; }
@@ -209,8 +209,8 @@ const GlobalStyles = () => (
     .topbar { background: ${C.snow}; border-bottom: 1px solid ${C.parchment}; position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
     .admin-topbar { background: ${C.snow}; border-bottom: 1px solid ${C.parchment}; }
     .prod-tag { display: inline-flex; align-items: center; background: ${C.primaryLight}; color: ${C.primary}; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-    .sec-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: ${C.ink}; }
-    .sec-sub { font-size: 12px; color: ${C.fog}; margin-top: 3px; }
+    .sec-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 500; color: ${C.ink}; }
+    .sec-sub { font-size: 12px; color: ${C.fog}; margin-top: 2px; }
 
     .search-bar {
       width: 100%; padding: 10px 16px 10px 40px; border-radius: 99px; border: 1.5px solid ${C.parchment};
@@ -584,7 +584,7 @@ function ProductsPanel({ products, setProducts, categories }) {
             <div style={{display:"flex",flexDirection:"column",gap:15}}>
               <div className="inp-group">
                 <label className="inp-label">Nama Produk *</label>
-                <input className="inp" placeholder="cth: Cincin Emas 18K Rose Gold" value={form.name} onChange={e => setForm({...form,name:e.target.value})}/>
+                <input className="inp" placeholder="Isi nama produk" value={form.name} onChange={e => setForm({...form,name:e.target.value})}/>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
                 <div className="inp-group">
@@ -599,19 +599,19 @@ function ProductsPanel({ products, setProducts, categories }) {
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Harga Jual (Rp) *</label>
-                  <input className="inp" type="number" placeholder="150000" value={form.price} onChange={e => setForm({...form,price:e.target.value})}/>
+                  <input className="inp" type="number" placeholder="0" value={form.price} onChange={e => setForm({...form,price:e.target.value})}/>
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Harga Asli (Rp)</label>
-                  <input className="inp" type="number" placeholder="200000" value={form.oldPrice} onChange={e => setForm({...form,oldPrice:e.target.value})}/>
+                  <input className="inp" type="number" placeholder="0" value={form.oldPrice} onChange={e => setForm({...form,oldPrice:e.target.value})}/>
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Diskon (%)</label>
-                  <input className="inp" type="number" placeholder="20" value={form.discount} onChange={e => setForm({...form,discount:e.target.value})}/>
+                  <input className="inp" type="number" placeholder="0" value={form.discount} onChange={e => setForm({...form,discount:e.target.value})}/>
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Jumlah Terjual</label>
-                  <input className="inp" placeholder="100rb+" value={form.sold} onChange={e => setForm({...form,sold:e.target.value})}/>
+                  <input className="inp" placeholder="0" value={form.sold} onChange={e => setForm({...form,sold:e.target.value})}/>
                 </div>
               </div>
               <div style={{display:"flex",gap:10,marginTop:4}}>
@@ -720,7 +720,7 @@ function CategoriesPanel({ categories, setCategories }) {
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="inp-group">
             <label className="inp-label">Nama Kategori *</label>
-            <input className="inp" placeholder="cth: Gelang" value={form.label} onChange={e => setForm({...form,label:e.target.value})}/>
+            <input className="inp" placeholder="Isi kategori" value={form.label} onChange={e => setForm({...form,label:e.target.value})}/>
           </div>
           <div style={{display:"flex",gap:10}}>
             <button onClick={() => { setView("list"); setErr(""); }} className="btn btn-ghost" style={{padding:"10px 22px"}}>Batal</button>
@@ -948,7 +948,7 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
       <div style={{display:"flex",flex:1,overflow:"hidden"}}>
         <div style={{width:210,background:C.sidebarBg,display:"flex",flexDirection:"column",flexShrink:0}}>
           <div style={{padding:"16px 16px 8px"}}>
-            <p style={{fontSize:9.5,fontWeight:700,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"1px",margin:0}}>Menu Utama</p>
+            <p style={{fontSize:12,fontWeight:700,color:"rgba(255, 255, 255, 0.35)",textTransform:"uppercase",letterSpacing:"1px",margin:0}}>Menu Utama</p>
           </div>
           {navItems.map(n => (
             <div key={n.key} className={`admin-nav ${tab===n.key?"active":""}`} onClick={() => setTabPersist(n.key)}>
@@ -957,14 +957,14 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
             </div>
           ))}
           <div style={{marginTop:"auto",padding:"14px 16px",borderTop:"1px solid rgba(255,255,255,.06)"}}>
-            <p style={{fontSize:10,color:"rgba(226,198,208,0.35)",margin:0}}>MeiHua © 2026</p>
+            <p style={{fontSize:12,color:"rgba(226,198,208,0.35)",margin:0}}>MeiHua © 2026</p>
           </div>
         </div>
 
         <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column"}}>
           {tab==="dashboard" && (
             <div style={{padding:26}}>
-              <h2 className="sec-title" style={{marginBottom:4}}>Selamat datang, {user} 🌸</h2>
+              <h2 className="sec-title" style={{marginBottom:4}}>Selamat datang, {user} ๑ ืົཽ₍₍ළ₎₎ ืົཽ</h2>
               <p className="sec-sub" style={{marginBottom:22}}>Ringkasan performa toko Anda</p>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:26}}>
                 <StatCard label="Total Produk" value={products.length} sub="Produk aktif" accent={C.primary}/>
@@ -974,8 +974,8 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
               </div>
               <div className="card">
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${C.parchment}`,background:C.silk}}>
-                  <p style={{fontWeight:700,fontSize:14,color:C.ink,margin:0,fontFamily:"'Playfair Display',serif"}}>Pesanan Terbaru</p>
-                  <button onClick={() => setTabPersist("orders")} style={{fontSize:12,color:C.primary,fontWeight:600,background:"none",border:"none",cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Lihat semua →</button>
+                  <p style={{fontWeight:700,fontSize:15,color:C.ink,margin:0,fontFamily:"'Playfair Display',serif"}}>Pesanan Terbaru</p>
+                  <button onClick={() => setTabPersist("orders")} style={{fontSize:13,color:C.primary,fontWeight:600,background:"none",border:"none",cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Lihat semua</button>
                 </div>
                 <table className="tbl">
                   <thead><tr><th>ID</th><th>Pelanggan</th><th>Total</th><th>Status</th></tr></thead>
@@ -1045,7 +1045,7 @@ function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout, s
             <button onClick={openAdmin} style={{background:C.primaryLight,color:C.primaryDeep,border:`1.5px solid ${C.parchment}`,borderRadius:99,padding:"6px 14px",fontSize:12,cursor:"pointer",fontWeight:700,fontFamily:"'Plus Jakarta Sans',sans-serif",transition:".15s"}}>
               Admin
             </button>
-            <button onClick={onLogout} style={{background:"none",border:"none",color:C.fog,fontSize:12,cursor:"pointer",padding:"6px 8px",fontFamily:"'Plus Jakarta Sans',sans-serif",display:"flex",alignItems:"center",gap:4}}>
+            <button onClick={onLogout} style={{background:"none",border:"none",color:C.fog,fontSize:13,cursor:"pointer",padding:"6px 8px",fontFamily:"'Plus Jakarta Sans',sans-serif",display:"flex",alignItems:"center",gap:4}}>
               <Ic.Logout/>Keluar
             </button>
           </div>
@@ -1334,7 +1334,7 @@ export default function App() {
             </div>
             <div className={`cat-item ${!activeCategory?"active":""}`}
               onClick={() => { setActiveCategory(null); setSearchQuery(""); }}>
-              🌸 Semua
+              Semua
             </div>
             {categories.map(cat => (
               <div key={cat.id} className={`cat-item ${activeCategory?.id===cat.id?"active":""}`}
@@ -1350,7 +1350,7 @@ export default function App() {
           {/* Area Produk */}
           <div style={{flex:1,overflowY:"auto",padding:18}}>
             {/* Breadcrumb */}
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,fontSize:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,fontSize:13}}>
               <span style={{cursor:"pointer",color:!activeCategory?C.primary:C.fog,fontWeight:600}}
                 onClick={() => { setActiveCategory(null); setSearchQuery(""); }}>
                 Semua Produk
