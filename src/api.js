@@ -12,10 +12,6 @@ function authHeaders() {
   };
 }
 
-/**
- * Wrapper fetch dengan logging otomatis.
- * Melempar Error jika HTTP status >= 400.
- */
 async function apiFetch(url, options = {}) {
   const fullUrl = url.startsWith('http') ? url : `${BASE}${url}`;
   console.log(`[MeiHua API] ${options.method || 'GET'} ${fullUrl}`);

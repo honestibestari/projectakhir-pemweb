@@ -12,10 +12,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/api/auth',       require('./routes/auth'));
-app.use('/api/products',   require('./routes/products'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
-app.use('/api/orders',     require('./routes/orders'));
+app.use('/api/orders', require('./routes/orders'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'MeiHua API berjalan normal.' });

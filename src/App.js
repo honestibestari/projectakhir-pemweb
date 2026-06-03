@@ -235,19 +235,45 @@ const GlobalStyles = () => (
 const MHLogo = ({ size = 40 }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="mh-bg" x1="0" y1="0" x2="48" y2="48">
-        <stop offset="0%" stopColor={C.primary}/>
-        <stop offset="100%" stopColor={C.primaryDeep}/>
+      <linearGradient id="mh-bg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#D4607E"/>
+        <stop offset="100%" stopColor="#8B2A47"/>
       </linearGradient>
-      <linearGradient id="mh-text" x1="0" y1="0" x2="48" y2="48">
-        <stop offset="0%" stopColor="#FFFFFF"/>
-        <stop offset="100%" stopColor={C.petal}/>
+      <linearGradient id="mh-inner" x1="0" y1="0" x2="0" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="rgba(255,255,255,0.15)"/>
+        <stop offset="100%" stopColor="rgba(0,0,0,0.08)"/>
       </linearGradient>
     </defs>
-    <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#mh-bg)"/>
-    <path d="M11 33V16L18 25L24 16V33" stroke="url(#mh-text)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-    <path d="M27 16V33 M36 16V33 M27 24.5H36" stroke="url(#mh-text)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-    <circle cx="24" cy="39" r="1.4" fill="rgba(255,255,255,0.5)"/>
+    <rect x="4" y="5" width="40" height="40" rx="13" fill="#8B2A47" opacity="0.25"/>
+    <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#mh-bg)"/>
+    <rect x="2" y="2" width="44" height="44" rx="13" fill="url(#mh-inner)"/>
+    <rect x="2.5" y="2.5" width="43" height="43" rx="12.5" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
+    <line x1="13" y1="9.5" x2="35" y2="9.5" stroke="rgba(255,255,255,0.18)" strokeWidth="0.7" strokeLinecap="round"/>
+    <line x1="13" y1="38.5" x2="35" y2="38.5" stroke="rgba(255,255,255,0.18)" strokeWidth="0.7" strokeLinecap="round"/>
+    <path
+      d="M9.5 32V15.5L17 25.5L24.5 15.5V32"
+      stroke="white"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+      opacity="0.95"
+    />
+    <path
+      d="M27.5 15.5V32"
+      stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.95"
+    />
+    <path
+      d="M37 15.5V32"
+      stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.95"
+    />
+    <path
+      d="M27.5 23.8H37"
+      stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.95"
+    />
+    <circle cx="24" cy="41" r="1.3" fill="rgba(255,255,255,0.45)"/>
+    <circle cx="20" cy="41" r="0.8" fill="rgba(255,255,255,0.22)"/>
+    <circle cx="28" cy="41" r="0.8" fill="rgba(255,255,255,0.22)"/>
   </svg>
 );
 
@@ -1175,19 +1201,26 @@ function TopNavbar({ user, userRole, cartCount, openCart, openAuth, openAdmin, o
 
         {/* Tombol Pesanan Saya — ikon checklist, hanya customer */}
         {user && userRole !== 'admin' && (
-          <button onClick={openMyOrders} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 9, display: "flex", alignItems: "center", color: C.stone, borderRadius: 10, transition: ".15s" }}
+          <button onClick={openMyOrders} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 9, display: "flex", alignItems: "center", color: C.stone, borderRadius: 10, transition: ".15s", marginLeft: -6 }}
             onMouseEnter={e => e.currentTarget.style.background = C.rose}
             onMouseLeave={e => e.currentTarget.style.background = "none"}
             title="Pesanan Saya">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="4" y="3" width="16" height="18" rx="2"/>
-              <path d="M9 3v0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v0"/>
-              <circle cx="9" cy="3" r="0.5" fill="currentColor"/>
-              <circle cx="12" cy="3" r="0.5" fill="currentColor"/>
-              <circle cx="15" cy="3" r="0.5" fill="currentColor"/>
-              <path d="M9 12l2 2 4-4"/>
-              <path d="M9 16l2 2 4-4"/>
-              <path d="M9 8l2 2 4-4"/>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              {/* Body clipboard */}
+              <rect x="5" y="4" width="14" height="17" rx="2.5" ry="2.5"/>
+              {/* Klip atas */}
+              <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/>
+              <line x1="9" y1="4" x2="15" y2="4"/>
+              {/* Lingkaran klip */}
+              <circle cx="10.5" cy="3.8" r="0.6" fill="currentColor" stroke="none"/>
+              <circle cx="13.5" cy="3.8" r="0.6" fill="currentColor" stroke="none"/>
+              {/* Baris checklist */}
+              <polyline points="8.5,9.5 9.5,10.5 11,9"/>
+              <line x1="12.5" y1="9.8" x2="16" y2="9.8"/>
+              <polyline points="8.5,13 9.5,14 11,12.5"/>
+              <line x1="12.5" y1="13.3" x2="16" y2="13.3"/>
+              <polyline points="8.5,16.5 9.5,17.5 11,16"/>
+              <line x1="12.5" y1="16.8" x2="16" y2="16.8"/>
             </svg>
           </button>
         )}
@@ -1332,7 +1365,6 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
     }
   };
 
-  // STEP 3 — Sukses
   if (step === 3) return (
     <Overlay onClose={() => {}}>
       <div style={{ background: C.snow, borderRadius: 20, width: 400, padding: "40px 32px", textAlign: "center", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
@@ -1356,7 +1388,6 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
     </Overlay>
   );
 
-  // STEP 2 — Konfirmasi
   if (step === 2) return (
     <Overlay onClose={() => setStep(1)}>
       <div style={{ background: C.snow, borderRadius: 20, width: 460, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
@@ -1414,7 +1445,6 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
     </Overlay>
   );
 
-  // STEP 1 — Form data diri
   return (
     <Overlay onClose={onClose}>
       <div style={{ background: C.snow, borderRadius: 20, width: 460, maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
@@ -1593,7 +1623,6 @@ function AuthModal({ close, setUser, mode, onLoginAdmin }) {
         localStorage.setItem('meihua_role', userRole);
         localStorage.setItem('meihua_name', userName);
         setUser(userName);
-        // Admin masuk dashboard, customer tetap di toko
         if (userRole === 'admin') onLoginAdmin();
         close();
       } else {
@@ -1682,7 +1711,6 @@ export default function App() {
   useEffect(() => { saveLocal('meihua_active_cat', activeCategory); }, [activeCategory]);
   useEffect(() => { saveLocal('meihua_search', searchQuery); }, [searchQuery]);
 
-  // Fetch public data (products & categories) — tidak butuh login
   useEffect(() => {
     const token = localStorage.getItem('meihua_token');
     const savedName = localStorage.getItem('meihua_name');
@@ -1706,7 +1734,6 @@ export default function App() {
     fetchPublicData();
   }, []);
 
-  // Fetch orders — hanya untuk admin
   useEffect(() => {
     const token = localStorage.getItem('meihua_token');
     const role = localStorage.getItem('meihua_role');

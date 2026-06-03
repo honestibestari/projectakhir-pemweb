@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, adminOnly } = require('../middleware/auth');
 
-// GET /api/orders
 router.get('/', verifyToken, async (req, res) => {
   try {
     let orders;
@@ -36,7 +35,6 @@ router.get('/', verifyToken, async (req, res) => {
       payment_method: o.payment_method || 'transfer',
       notes: o.notes || '',
       status: o.status || 'pending',
-      // Normalisasi date — ambil YYYY-MM-DD saja
       date: o.date
         ? new Date(o.date).toISOString().slice(0, 10)
         : new Date(o.created_at).toISOString().slice(0, 10),
@@ -45,7 +43,7 @@ router.get('/', verifyToken, async (req, res) => {
         .filter(i => String(i.order_id) === String(o.id))
         .map(i => ({
           id: i.product_id || null,
-          name: i.product_name || '',   // ← pakai product_name sesuai DB
+          name: i.product_name || '',  
           qty: Number(i.qty),
           price: Number(i.price),
         })),
@@ -58,7 +56,6 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/orders — customer buat pesanan baru
 router.post('/', verifyToken, async (req, res) => {
   const { customer, phone, address, payment_method, notes, items, total } = req.body;
 
@@ -102,7 +99,6 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// PATCH /api/orders/:id/status — update status (admin only)
 router.patch('/:id/status', verifyToken, adminOnly, async (req, res) => {
   const { status } = req.body;
   const validStatus = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
