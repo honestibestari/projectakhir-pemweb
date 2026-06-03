@@ -220,8 +220,9 @@ export async function apiDeleteCategory(id) {
 export async function apiGetOrders() {
   try {
     const token = getToken();
+
     if (!token) {
-      console.warn('[MeiHua API] getOrders dipanggil tanpa token – skip.');
+      console.warn('Token tidak ditemukan');
       return [];
     }
 
@@ -229,14 +230,46 @@ export async function apiGetOrders() {
       headers: authHeaders(),
     });
 
-    const list = Array.isArray(data) ? data : (data?.data ?? data?.orders ?? []);
-    console.log(`[MeiHua API] Loaded ${list.length} orders`);
-    return list;
+    console.log('RAW ORDERS:', data);
 
+    let orders = [];
+
+    if (Array.isArray(data)) {
+      orders = data;
+    } else if (Array.isArray(data.orders)) {
+      orders = data.orders;
+    } else if (Array.isArray(data.data)) {
+      orders = data.data;
+    } else {
+      orders = [];
+    }
+
+    const normalized = orders.map(order => ({
+      id: String(order.id),
+      customer: order.customer || '-',
+      phone: order.phone || '-',
+      address: order.address || '-',
+      total: Number(order.total || 0),
+      status: order.status || 'pending',
+      date: order.date || '',
+      items: Array.isArray(order.items) ? order.items : []
+    }));
+
+    console.log('NORMALIZED ORDERS:', normalized);
+
+    return normalized;
   } catch (err) {
-    console.error('[MeiHua API] getOrders error:', err);
+    console.error('getOrders error:', err);
     return [];
   }
+}
+
+export async function apiCreateOrder(orderData) {
+  return apiFetch('/orders', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(orderData),
+  });
 }
 
 export async function apiUpdateOrderStatus(id, status) {

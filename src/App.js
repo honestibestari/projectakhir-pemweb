@@ -3,7 +3,7 @@ import {
   apiLogin, apiRegister, apiGetProducts, apiGetCategories,
   apiGetOrders, apiAddProduct, apiUpdateProduct, apiDeleteProduct,
   apiAddCategory, apiUpdateCategory, apiDeleteCategory,
-  apiUpdateOrderStatus
+  apiUpdateOrderStatus, apiCreateOrder
 } from './api';
 
 const C = {
@@ -1119,109 +1119,367 @@ function ProductGrid({ products, cart, addToCart, removeFromCart, searchQuery })
   );
 }
 
-function CartPopup({ cart, close, remove }) {
-  const total = cart.reduce((s,i) => s+i.price*i.qty, 0);
-  return (
-    <>
-      <div onClick={close} style={{position:"fixed",inset:0,background:"rgba(28,17,23,.45)",zIndex:998,backdropFilter:"blur(2px)"}}/>
-      <div style={{position:"fixed",top:0,right:0,width:370,height:"100vh",background:C.snow,boxShadow:`-4px 0 32px rgba(28,17,23,.12)`,zIndex:999,display:"flex",flexDirection:"column"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 22px",borderBottom:`1px solid ${C.parchment}`,background:C.silk}}>
-          <h3 style={{margin:0,fontSize:18,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>Keranjang Belanja</h3>
-          <button onClick={close} className="btn btn-icon"><Ic.X/></button>
+const PAYMENT_METHODS = [
+  { id: "transfer", label: "Transfer Bank", icon: "🏦", detail: "BCA · Mandiri · BNI" },
+  { id: "qris",     label: "QRIS",          icon: "📱", detail: "Semua e-wallet & m-banking" },
+  { id: "cod",      label: "COD",           icon: "🚚", detail: "Bayar saat barang tiba" },
+];
+
+function CheckoutModal({ cart, user, onClose, onSuccess }) {
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({ name: user || "", phone: "", address: "", payment: "transfer", notes: "" });
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
+  const validate = () => {
+    if (!form.name.trim()) return "Nama penerima wajib diisi.";
+    if (!form.phone.trim() || form.phone.replace(/\D/g,'').length < 9) return "Nomor HP tidak valid.";
+    if (!form.address.trim()) return "Alamat pengiriman wajib diisi.";
+    return null;
+  };
+
+  const handleNext = () => {
+    const e = validate();
+    if (e) { setErr(e); return; }
+    setErr(""); setStep(2);
+  };
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await apiCreateOrder({
+        customer: form.name,
+        phone: form.phone,
+        address: form.address,
+        payment_method: form.payment,
+        notes: form.notes,
+        items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
+        total,
+      });
+      setStep(3);
+    } catch (e) {
+      setErr("Gagal membuat pesanan: " + e.message);
+      setStep(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // STEP 3 — Sukses
+  if (step === 3) return (
+    <Overlay onClose={() => {}}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 400, padding: "40px 32px", textAlign: "center", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+        <div style={{ width: 68, height: 68, borderRadius: "50%", background: C.jadeLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 32 }}>✓</div>
+        <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: C.ink }}>Pesanan Berhasil!</h3>
+        <p style={{ fontSize: 13, color: C.stone, margin: "0 0 6px", lineHeight: 1.7 }}>
+          Terima kasih, <strong>{form.name}</strong>!
+        </p>
+        <p style={{ fontSize: 12, color: C.fog, margin: "0 0 24px" }}>
+          Kami akan menghubungi {form.phone} untuk konfirmasi.
+        </p>
+        <div style={{ background: C.rose, borderRadius: 12, padding: "14px 18px", marginBottom: 24, textAlign: "left" }}>
+          <p style={{ fontSize: 11, color: C.stone, margin: "0 0 4px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".7px" }}>Total Pembayaran</p>
+          <p style={{ fontSize: 24, fontWeight: 700, color: C.primary, margin: "0 0 4px" }}>{fmt(total)}</p>
+          <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>via {PAYMENT_METHODS.find(m => m.id === form.payment)?.label}</p>
         </div>
-        {cart.length===0 ? (
-          <div style={{textAlign:"center",marginTop:90,color:C.fog,padding:22}}>
-            <span style={{fontSize:44}}>🛍️</span>
-            <p style={{fontSize:15,marginTop:16,fontWeight:600,color:C.stone}}>Keranjang masih kosong</p>
-            <p style={{fontSize:12,color:C.fog,marginTop:5}}>Tambahkan produk perhiasan pilihan Anda</p>
+        <button onClick={onSuccess} className="btn btn-primary" style={{ width: "100%", padding: 13 }}>
+          Kembali Belanja
+        </button>
+      </div>
+    </Overlay>
+  );
+
+  // STEP 2 — Konfirmasi
+  if (step === 2) return (
+    <Overlay onClose={() => setStep(1)}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 460, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.parchment}`, background: C.silk, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".8px", margin: "0 0 3px" }}>Langkah 2 dari 2</p>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display',serif" }}>Konfirmasi Pesanan</h3>
           </div>
-        ) : (
-          <>
-            <div style={{flex:1,overflowY:"auto",padding:"18px 22px"}}>
-              {cart.map(item => (
-                <div key={item.id} style={{display:"flex",justifyContent:"space-between",marginBottom:16,paddingBottom:16,borderBottom:`1px solid ${C.parchment}`,gap:12}}>
-                  {item.img && <img src={item.img} alt="" style={{width:46,height:46,borderRadius:9,objectFit:"cover",border:`1px solid ${C.parchment}`,flexShrink:0}}/>}
-                  <div style={{flex:1}}>
-                    <p style={{fontSize:13,fontWeight:600,color:C.ink,margin:"0 0 4px"}}>{item.name}</p>
-                    <p style={{fontSize:12,color:C.fog,margin:0}}>{item.qty} × {fmt(item.price)}</p>
+          <button onClick={onClose} className="btn btn-icon"><Ic.X /></button>
+        </div>
+        <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+          {err && <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>}
+          <div style={{ background: C.rose, borderRadius: 12, padding: 16 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 10px" }}>Dikirim ke</p>
+            <p style={{ fontWeight: 700, color: C.ink, margin: "0 0 3px", fontSize: 14 }}>{form.name}</p>
+            <p style={{ fontSize: 12, color: C.fog, margin: "0 0 3px" }}>{form.phone}</p>
+            <p style={{ fontSize: 12, color: C.fog, margin: 0 }}>{form.address}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 10px" }}>Item Pesanan ({cart.length})</p>
+            {cart.map((item, i) => (
+              <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < cart.length - 1 ? `1px solid ${C.parchment}` : "none", gap: 10 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  {item.img && <img src={item.img} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", border: `1px solid ${C.parchment}` }} />}
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: "0 0 2px" }}>{item.name}</p>
+                    <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>×{item.qty} · {fmt(item.price)}</p>
                   </div>
-                  <button onClick={() => remove(item.id)} className="btn btn-danger-soft" style={{fontSize:11,padding:"4px 10px",flexShrink:0}}>Hapus</button>
+                </div>
+                <p style={{ fontWeight: 700, color: C.ink, margin: 0, flexShrink: 0 }}>{fmt(item.qty * item.price)}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: C.silk, borderRadius: 10 }}>
+            <span style={{ fontSize: 13, color: C.stone }}>Metode Pembayaran</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{PAYMENT_METHODS.find(m => m.id === form.payment)?.label}</span>
+          </div>
+          {form.notes && (
+            <div style={{ padding: "10px 14px", background: C.silk, borderRadius: 10 }}>
+              <span style={{ fontSize: 12, color: C.fog }}>Catatan: {form.notes}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 16px", background: C.primaryLight, borderRadius: 10, border: `1px solid ${C.blush}` }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Total Bayar</span>
+            <span style={{ fontWeight: 700, fontSize: 20, color: C.primary }}>{fmt(total)}</span>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => { setErr(""); setStep(1); }} className="btn btn-ghost" style={{ flex: 1, padding: 12 }}>← Ubah Data</button>
+            <button onClick={handleConfirm} disabled={loading} className="btn btn-primary" style={{ flex: 2, padding: 12, opacity: loading ? 0.7 : 1 }}>
+              {loading ? "Memproses..." : "✓ Konfirmasi & Pesan"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Overlay>
+  );
+
+  // STEP 1 — Form data diri
+  return (
+    <Overlay onClose={onClose}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 460, maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+        <div style={{ background: `linear-gradient(135deg,${C.primary},${C.primaryDeep})`, padding: "22px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ margin: "0 0 3px", fontSize: 10, color: "rgba(255,255,255,.7)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px" }}>Langkah 1 dari 2</p>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',serif" }}>Data Pengiriman</h3>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: "rgba(255,255,255,.7)" }}>{cart.length} produk · {fmt(total)}</p>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,.2)", border: "none", borderRadius: 9, width: 34, height: 34, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Ic.X />
+          </button>
+        </div>
+        <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+          {err && <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>}
+          <div className="inp-group">
+            <label className="inp-label">Nama Penerima *</label>
+            <input className="inp" placeholder="Nama lengkap penerima" value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="inp-group">
+            <label className="inp-label">Nomor HP *</label>
+            <input className="inp" placeholder="08xxxxxxxxxx" type="tel" value={form.phone}
+              onChange={e => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div className="inp-group">
+            <label className="inp-label">Alamat Pengiriman *</label>
+            <textarea className="inp" placeholder="Jalan, nomor rumah, kelurahan, kota, kode pos..." value={form.address}
+              onChange={e => setForm({ ...form, address: e.target.value })} style={{ minHeight: 80 }} />
+          </div>
+          <div className="inp-group">
+            <label className="inp-label">Metode Pembayaran *</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+              {PAYMENT_METHODS.map(m => (
+                <div key={m.id} onClick={() => setForm({ ...form, payment: m.id })}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", border: `1.5px solid ${form.payment === m.id ? C.primary : C.parchment}`, borderRadius: 10, cursor: "pointer", background: form.payment === m.id ? C.primaryLight : C.snow, transition: ".15s" }}>
+                  <span style={{ fontSize: 22 }}>{m.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: form.payment === m.id ? C.primaryDeep : C.ink }}>{m.label}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: C.fog }}>{m.detail}</p>
+                  </div>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${form.payment === m.id ? C.primary : C.parchment}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {form.payment === m.id && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.primary }} />}
+                  </div>
                 </div>
               ))}
             </div>
-            <div style={{padding:"18px 22px",borderTop:`1px solid ${C.parchment}`,background:C.rose}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:16}}>
-                <span style={{fontWeight:600,color:C.stone}}>Total</span>
-                <span style={{fontWeight:700,fontSize:18,color:C.primary}}>{fmt(total)}</span>
+          </div>
+          <div className="inp-group">
+            <label className="inp-label">Catatan (opsional)</label>
+            <input className="inp" placeholder="Instruksi khusus untuk penjual..." value={form.notes}
+              onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
+          <button onClick={handleNext} className="btn btn-primary" style={{ width: "100%", padding: 13, marginTop: 4 }}>
+            Lanjut ke Konfirmasi →
+          </button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
+function CartPopup({ cart, close, remove, user, openAuth, clearCart }) {
+  const [showCheckout, setShowCheckout] = useState(false);
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
+  const handleCheckout = () => {
+    if (!user) {
+      close();
+      openAuth("login");
+      return;
+    }
+    setShowCheckout(true);
+  };
+
+  const handleSuccess = () => {
+    setShowCheckout(false);
+    clearCart();
+    close();
+  };
+
+  return (
+    <>
+      <div onClick={close} style={{ position: "fixed", inset: 0, background: "rgba(28,17,23,.45)", zIndex: 998, backdropFilter: "blur(2px)" }} />
+      <div style={{ position: "fixed", top: 0, right: 0, width: 370, height: "100vh", background: C.snow, boxShadow: `-4px 0 32px rgba(28,17,23,.12)`, zIndex: 999, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 22px", borderBottom: `1px solid ${C.parchment}`, background: C.silk }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.ink, fontFamily: "'Playfair Display',serif" }}>Keranjang Belanja</h3>
+          <button onClick={close} className="btn btn-icon"><Ic.X /></button>
+        </div>
+
+        {cart.length === 0 ? (
+          <div style={{ textAlign: "center", marginTop: 90, color: C.fog, padding: 22 }}>
+            <span style={{ fontSize: 44 }}>🛍️</span>
+            <p style={{ fontSize: 15, marginTop: 16, fontWeight: 600, color: C.stone }}>Keranjang masih kosong</p>
+            <p style={{ fontSize: 12, color: C.fog, marginTop: 5 }}>Tambahkan produk perhiasan pilihan Anda</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px" }}>
+              {cart.map(item => (
+                <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${C.parchment}`, gap: 12 }}>
+                  {item.img && <img src={item.img} alt="" style={{ width: 46, height: 46, borderRadius: 9, objectFit: "cover", border: `1px solid ${C.parchment}`, flexShrink: 0 }} />}
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>{item.name}</p>
+                    <p style={{ fontSize: 12, color: C.fog, margin: 0 }}>{item.qty} × {fmt(item.price)}</p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 13, color: C.ink }}>{fmt(item.qty * item.price)}</span>
+                    <button onClick={() => remove(item.id)} className="btn btn-danger-soft" style={{ fontSize: 11, padding: "3px 10px" }}>Hapus</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: "18px 22px", borderTop: `1px solid ${C.parchment}`, background: C.rose }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, color: C.stone }}>Total ({cart.reduce((s,i)=>s+i.qty,0)} item)</span>
+                <span style={{ fontWeight: 700, fontSize: 18, color: C.primary }}>{fmt(total)}</span>
               </div>
-              <button className="btn btn-primary" style={{width:"100%",padding:13,fontSize:13,borderRadius:10}}>Checkout Sekarang</button>
+              {!user && (
+                <p style={{ fontSize: 12, color: C.stone, textAlign: "center", marginBottom: 10, background: C.amberL, padding: "8px 12px", borderRadius: 8 }}>
+                  ⚠ Silakan{" "}
+                  <span style={{ color: C.primary, cursor: "pointer", fontWeight: 700 }} onClick={handleCheckout}>login</span>
+                  {" "}terlebih dahulu untuk checkout
+                </p>
+              )}
+              <button onClick={handleCheckout} className="btn btn-primary" style={{ width: "100%", padding: 13, fontSize: 13, borderRadius: 10 }}>
+                {user ? "Checkout Sekarang →" : "Login untuk Checkout"}
+              </button>
             </div>
           </>
         )}
       </div>
+
+      {showCheckout && (
+        <CheckoutModal
+          cart={cart}
+          user={user}
+          onClose={() => setShowCheckout(false)}
+          onSuccess={handleSuccess}
+        />
+      )}
     </>
   );
 }
 
-function AuthModal({ close, setUser, mode, onLogin }) {
-  const [isLogin, setIsLogin] = useState(mode==="login");
+function AuthModal({ close, setUser, mode, onLoginAdmin }) {
+  const [isLogin, setIsLogin] = useState(mode === "login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setErr(""); setLoading(true);
+    e.preventDefault();
+    setErr("");
+    if (password.length < 6) { setErr("Password minimal 6 karakter."); return; }
+    setLoading(true);
     try {
       let res;
-      if (isLogin) { res = await apiLogin(email, password); }
-      else {
+      if (isLogin) {
+        res = await apiLogin(email, password);
+      } else {
         if (!name.trim()) { setErr("Nama tidak boleh kosong."); setLoading(false); return; }
         res = await apiRegister(name.trim(), email, password);
       }
       if (res?.token) {
         localStorage.setItem('meihua_token', res.token);
-        const userName = (typeof res.user==='object' ? res.user?.name : res.user) || email.split('@')[0];
-        const userRole = (typeof res.user==='object' ? res.user?.role : 'user') || 'user';
+        const userName = (typeof res.user === 'object' ? res.user?.name : res.user) || email.split('@')[0];
+        const userRole = (typeof res.user === 'object' ? res.user?.role : 'user') || 'user';
         localStorage.setItem('meihua_role', userRole);
         localStorage.setItem('meihua_name', userName);
-        setUser(userName); onLogin(); close();
-      } else { setErr(res?.message || 'Terjadi kesalahan.'); }
+        setUser(userName);
+        // Admin masuk dashboard, customer tetap di toko
+        if (userRole === 'admin') onLoginAdmin();
+        close();
+      } else {
+        setErr(res?.message || 'Terjadi kesalahan.');
+      }
     } catch (error) {
-      console.error('[AuthModal]', error);
       setErr('Tidak dapat terhubung ke server.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Overlay onClose={close}>
-      <div style={{background:C.snow,borderRadius:20,width:390,overflow:"hidden",boxShadow:"0 28px 72px rgba(28,17,23,.25)"}}>
-        <div style={{background:`linear-gradient(135deg,${C.primary} 0%,${C.primaryDeep} 100%)`,padding:"28px 32px 26px",textAlign:"center",position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",inset:0,opacity:.08,backgroundImage:"repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)",backgroundSize:"12px 12px"}}/>
-          <MHLogo size={46}/>
-          <h2 style={{margin:"14px 0 4px",fontSize:22,color:"#fff",fontWeight:700,fontFamily:"'Playfair Display',serif"}}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 390, overflow: "hidden", boxShadow: "0 28px 72px rgba(28,17,23,.25)" }}>
+        <div style={{ background: `linear-gradient(135deg,${C.primary} 0%,${C.primaryDeep} 100%)`, padding: "28px 32px 26px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, opacity: .08, backgroundImage: "repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)", backgroundSize: "12px 12px" }} />
+          <MHLogo size={46} />
+          <h2 style={{ margin: "14px 0 4px", fontSize: 22, color: "#fff", fontWeight: 700, fontFamily: "'Playfair Display',serif" }}>
             {isLogin ? "Selamat Datang" : "Buat Akun Baru"}
           </h2>
-          <p style={{margin:0,fontSize:12,color:"rgba(255,255,255,.75)"}}>MeiHua Official</p>
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,.75)" }}>MeiHua Official</p>
         </div>
-        <div style={{padding:"26px 32px 28px",background:C.snow}}>
-          {err && <div style={{background:C.dangerL,border:`1px solid #FECACA`,borderRadius:9,padding:"10px 14px",marginBottom:14,fontSize:13,color:C.danger}}>{err}</div>}
-          <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{ padding: "26px 32px 28px" }}>
+          {err && (
+            <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: C.danger }}>
+              {err}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {!isLogin && (
-              <input className="inp" placeholder="Nama lengkap" value={name} onChange={e => setName(e.target.value)} required disabled={loading}/>
+              <input className="inp" placeholder="Nama lengkap" value={name}
+                onChange={e => setName(e.target.value)} required disabled={loading} />
             )}
-            <input className="inp" placeholder="Alamat email" type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading}/>
-            <input className="inp" placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading}/>
+            <input className="inp" placeholder="Alamat email" type="email" value={email}
+              onChange={e => setEmail(e.target.value)} required disabled={loading} />
+            <div style={{ position: "relative" }}>
+              <input className="inp" placeholder="Password (min. 6 karakter)"
+                type={showPass ? "text" : "password"} value={password}
+                onChange={e => setPassword(e.target.value)} required disabled={loading}
+                style={{ paddingRight: 100 }} />
+              <button type="button" onClick={() => setShowPass(v => !v)}
+                style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.fog, fontSize: 12, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+                {showPass ? "Sembunyikan" : "Tampilkan"}
+              </button>
+            </div>
             <button type="submit" className="btn btn-primary" disabled={loading}
-              style={{width:"100%",padding:13,fontSize:13,borderRadius:10,marginTop:4,opacity:loading?0.7:1}}>
+              style={{ width: "100%", padding: 13, fontSize: 13, borderRadius: 10, marginTop: 4, opacity: loading ? 0.7 : 1 }}>
               {loading ? "Memproses..." : (isLogin ? "Masuk ke Akun" : "Daftar Sekarang")}
             </button>
           </form>
-          <hr className="divider" style={{margin:"20px 0"}}/>
-          <p style={{textAlign:"center",fontSize:13,color:C.fog,margin:0}}>
+          <hr className="divider" style={{ margin: "20px 0" }} />
+          <p style={{ textAlign: "center", fontSize: 13, color: C.fog, margin: 0 }}>
             {isLogin ? "Belum punya akun?" : "Sudah punya akun?"}{" "}
-            <span style={{color:C.primary,cursor:"pointer",fontWeight:700}} onClick={() => { setIsLogin(!isLogin); setErr(""); }}>
+            <span style={{ color: C.primary, cursor: "pointer", fontWeight: 700 }}
+              onClick={() => { setIsLogin(!isLogin); setErr(""); }}>
               {isLogin ? "Daftar disini" : "Masuk"}
             </span>
           </p>
@@ -1244,6 +1502,7 @@ export default function App() {
   const [categories, setCategories]   = useState([]);
   const [orders, setOrders]           = useState([]);
   const [loading, setLoading]         = useState(true);
+  const clearCart = () => setCart([]);
 
   useEffect(() => { saveLocal('meihua_cart', cart); }, [cart]);
   useEffect(() => { saveLocal('meihua_admin_mode', adminMode); }, [adminMode]);
@@ -1267,8 +1526,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user || !localStorage.getItem('meihua_token')) return;
-    apiGetOrders().then(data => setOrders(Array.isArray(data) ? data : [])).catch(console.error);
+    const token = localStorage.getItem('meihua_token');
+    const role = localStorage.getItem('meihua_role');
+    if (!user || !token || role !== 'admin') return;
+    apiGetOrders()
+      .then(data => setOrders(Array.isArray(data) ? data : []))
+      .catch(console.error);
   }, [user]);
 
   const addToCart = (product) => setCart(prev => {
@@ -1390,8 +1653,25 @@ export default function App() {
         </div>
       )}
 
-      {showCart && <CartPopup cart={cart} close={() => setShowCart(false)} remove={removeFromCart}/>}
-      {showAuth && <AuthModal mode={showAuth} close={() => setShowAuth(null)} setUser={setUser} onLogin={() => setAdminMode(true)}/>}
+      {showCart && (
+        <CartPopup
+          cart={cart}
+          close={() => setShowCart(false)}
+          remove={removeFromCart}
+          user={user}
+          openAuth={m => setShowAuth(m)}
+          clearCart={clearCart}
+        />
+      )}
+
+      {showAuth && (
+        <AuthModal
+          mode={showAuth}
+          close={() => setShowAuth(null)}
+          setUser={setUser}
+          onLoginAdmin={() => setAdminMode(true)}
+        />
+      )}
       {showLogout && (
         <ConfirmModal
           title="Yakin ingin keluar?"
