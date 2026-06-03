@@ -3,7 +3,7 @@ import {
   apiLogin, apiRegister, apiGetProducts, apiGetCategories,
   apiGetOrders, apiAddProduct, apiUpdateProduct, apiDeleteProduct,
   apiAddCategory, apiUpdateCategory, apiDeleteCategory,
-  apiUpdateOrderStatus, apiCreateOrder
+  apiUpdateOrderStatus, apiCreateOrder, apiGetMyOrders
 } from './api';
 
 const C = {
@@ -906,6 +906,141 @@ function SalesReportPanel({ orders, products, categories }) {
   );
 }
 
+function MyOrdersPanel({ onClose }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    apiGetMyOrders()
+      .then(data => setOrders(Array.isArray(data) ? data : []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const STATUS_COLOR = {
+    pending:    { bg: C.amberL,    color: C.amber },
+    processing: { bg: C.sapphireL, color: C.sapphire },
+    shipped:    { bg: "#E0F2FE",   color: "#0369A1" },
+    delivered:  { bg: C.jadeLight, color: C.jade },
+    cancelled:  { bg: C.dangerL,   color: C.danger },
+  };
+
+  return (
+    <Overlay onClose={onClose}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 620, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+        {/* Header */}
+        <div style={{ background: `linear-gradient(135deg,${C.primary},${C.primaryDeep})`, padding: "22px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',serif" }}>Riwayat Pesanan</h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,.75)" }}>{orders.length} pesanan ditemukan</p>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,.2)", border: "none", borderRadius: 9, width: 34, height: 34, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Ic.X />
+          </button>
+        </div>
+
+        <div style={{ padding: 24 }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 52 }}>
+              <div className="uploading-bar" style={{ width: 120, margin: "0 auto 12px" }} />
+              <p style={{ fontSize: 13, color: C.fog }}>Memuat pesanan...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 52 }}>
+              <span style={{ fontSize: 48 }}>📦</span>
+              <p style={{ fontSize: 15, fontWeight: 600, color: C.stone, marginTop: 16 }}>Belum ada pesanan</p>
+              <p style={{ fontSize: 12, color: C.fog, marginTop: 6 }}>Mulai belanja dan pesanan Anda akan muncul di sini</p>
+              <button onClick={onClose} className="btn btn-primary" style={{ marginTop: 20, padding: "10px 28px" }}>Mulai Belanja</button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {orders.map(order => {
+                const sc = STATUS_COLOR[order.status] || STATUS_COLOR.pending;
+                return (
+                  <div key={order.id} style={{ border: `1px solid ${C.parchment}`, borderRadius: 14, overflow: "hidden", transition: ".2s" }}>
+                    {/* Order header */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: C.silk, borderBottom: `1px solid ${C.parchment}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.primary }}>#{order.id}</p>
+                          <p style={{ margin: "2px 0 0", fontSize: 11, color: C.fog }}>{order.date}</p>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 99 }}>
+                          {STATUS_LABEL[order.status] || order.status}
+                        </span>
+                        <button onClick={() => setSelected(selected?.id === order.id ? null : order)}
+                          style={{ background: "none", border: `1px solid ${C.parchment}`, borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontSize: 12, color: C.stone, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 600 }}>
+                          {selected?.id === order.id ? "Tutup" : "Detail"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Order items preview */}
+                    <div style={{ padding: "14px 18px" }}>
+                      {order.items?.slice(0, 2).map((item, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: i < Math.min(order.items.length, 2) - 1 ? 8 : 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            {item.img && <img src={item.img} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover", border: `1px solid ${C.parchment}` }} />}
+                            <div>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: 0 }}>{item.name}</p>
+                              <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>×{item.qty} · {fmt(item.price)}</p>
+                            </div>
+                          </div>
+                          <span style={{ fontWeight: 700, fontSize: 13, color: C.ink }}>{fmt(item.qty * item.price)}</span>
+                        </div>
+                      ))}
+                      {order.items?.length > 2 && (
+                        <p style={{ fontSize: 11, color: C.fog, margin: "8px 0 0" }}>+{order.items.length - 2} produk lainnya</p>
+                      )}
+                    </div>
+
+                    {/* Total */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 18px", borderTop: `1px solid ${C.parchment}`, background: C.rose }}>
+                      <span style={{ fontSize: 12, color: C.stone, fontWeight: 600 }}>Total Pembayaran</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: C.primary }}>{fmt(order.total)}</span>
+                    </div>
+
+                    {/* Detail expanded */}
+                    {selected?.id === order.id && (
+                      <div style={{ padding: "16px 18px", borderTop: `1px solid ${C.parchment}`, background: C.snow }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                          <div style={{ background: C.silk, borderRadius: 10, padding: "12px 14px" }}>
+                            <p style={{ fontSize: 10, fontWeight: 700, color: C.fog, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 6px" }}>Dikirim ke</p>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: "0 0 3px" }}>{order.customer}</p>
+                            <p style={{ fontSize: 12, color: C.fog, margin: "0 0 3px" }}>{order.phone}</p>
+                            <p style={{ fontSize: 12, color: C.fog, margin: 0 }}>{order.address}</p>
+                          </div>
+                          <div style={{ background: C.silk, borderRadius: 10, padding: "12px 14px" }}>
+                            <p style={{ fontSize: 10, fontWeight: 700, color: C.fog, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 6px" }}>Pembayaran</p>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: "0 0 3px" }}>
+                              {PAYMENT_METHODS?.find(m => m.id === order.payment_method)?.label || order.payment_method || 'Transfer Bank'}
+                            </p>
+                            <p style={{ fontSize: 12, color: C.fog, margin: 0 }}>Status: <span style={{ color: sc.color, fontWeight: 700 }}>{STATUS_LABEL[order.status]}</span></p>
+                          </div>
+                        </div>
+                        {order.notes && (
+                          <div style={{ background: C.amberL, borderRadius: 10, padding: "10px 14px" }}>
+                            <p style={{ fontSize: 11, color: C.amber, fontWeight: 700, margin: "0 0 3px" }}>Catatan</p>
+                            <p style={{ fontSize: 12, color: C.ink, margin: 0 }}>{order.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
 function AdminPanel({ products, setProducts, categories, setCategories, orders, setOrders, user, onClose }) {
   const [tab, setTab] = useState(() => loadLocal('meihua_admin_tab', 'dashboard'));
   const pendingCount = orders.filter(o => o.status==="pending").length;
@@ -1003,50 +1138,81 @@ function AdminPanel({ products, setProducts, categories, setCategories, orders, 
   );
 }
 
-function TopNavbar({ user, cartCount, openCart, openAuth, openAdmin, onLogout, searchQuery, setSearchQuery }) {
+function TopNavbar({ user, userRole, cartCount, openCart, openAuth, openAdmin, onLogout, searchQuery, setSearchQuery, openMyOrders }) {
   return (
-    <div className="topbar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 24px"}}>
-      <div style={{display:"flex",alignItems:"center",gap:11}}>
-        <MHLogo size={34}/>
+    <div className="topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        <MHLogo size={34} />
         <div>
-          <span style={{fontSize:16,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif",letterSpacing:".2px"}}>
-            MeiHua <span style={{color:C.primary}}>Official</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.ink, fontFamily: "'Playfair Display',serif", letterSpacing: ".2px" }}>
+            MeiHua <span style={{ color: C.primary }}>Official</span>
           </span>
-          <p style={{margin:0,fontSize:9.5,color:C.primaryMid,fontWeight:700,letterSpacing:"1.2px",textTransform:"uppercase"}}>Fine Jewelry</p>
+          <p style={{ margin: 0, fontSize: 9.5, color: C.primaryMid, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase" }}>Fine Jewelry</p>
         </div>
       </div>
-      <div style={{position:"relative",width:"36%"}}>
-        <span style={{position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:C.fog,pointerEvents:"none"}}><Ic.Search/></span>
-        <input className="search-bar" placeholder="Cari produk perhiasan..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
+
+      <div style={{ position: "relative", width: "36%" }}>
+        <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: C.fog, pointerEvents: "none" }}><Ic.Search /></span>
+        <input className="search-bar" placeholder="Cari produk perhiasan..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         {searchQuery && (
-          <button onClick={() => setSearchQuery("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:C.fog,display:"flex",alignItems:"center",padding:2}}>
-            <Ic.X/>
+          <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.fog, display: "flex", alignItems: "center", padding: 2 }}>
+            <Ic.X />
           </button>
         )}
       </div>
-      <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        <button onClick={openCart} style={{position:"relative",background:"none",border:"none",cursor:"pointer",padding:9,display:"flex",alignItems:"center",color:C.stone,borderRadius:10,transition:".15s"}}
-          onMouseEnter={e => e.currentTarget.style.background=C.rose}
-          onMouseLeave={e => e.currentTarget.style.background="none"}>
-          <Ic.Cart/>
-          {cartCount>0 && <span style={{position:"absolute",top:3,right:3,background:C.primary,color:"#fff",borderRadius:"50%",width:17,height:17,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700}}>{cartCount}</span>}
-        </button>
+
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+
+        {/* Tombol Keranjang — hanya customer */}
+        {userRole !== 'admin' && (
+          <button onClick={openCart} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 9, display: "flex", alignItems: "center", color: C.stone, borderRadius: 10, transition: ".15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = C.rose}
+            onMouseLeave={e => e.currentTarget.style.background = "none"}>
+            <Ic.Cart />
+            {cartCount > 0 && <span style={{ position: "absolute", top: 3, right: 3, background: C.primary, color: "#fff", borderRadius: "50%", width: 17, height: 17, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>{cartCount}</span>}
+          </button>
+        )}
+
+        {/* Tombol Pesanan Saya — ikon checklist, hanya customer */}
+        {user && userRole !== 'admin' && (
+          <button onClick={openMyOrders} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", padding: 9, display: "flex", alignItems: "center", color: C.stone, borderRadius: 10, transition: ".15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = C.rose}
+            onMouseLeave={e => e.currentTarget.style.background = "none"}
+            title="Pesanan Saya">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="3" width="16" height="18" rx="2"/>
+              <path d="M9 3v0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v0"/>
+              <circle cx="9" cy="3" r="0.5" fill="currentColor"/>
+              <circle cx="12" cy="3" r="0.5" fill="currentColor"/>
+              <circle cx="15" cy="3" r="0.5" fill="currentColor"/>
+              <path d="M9 12l2 2 4-4"/>
+              <path d="M9 16l2 2 4-4"/>
+              <path d="M9 8l2 2 4-4"/>
+            </svg>
+          </button>
+        )}
+
         {!user ? (
           <>
             <button className="btn btn-ghost" onClick={() => openAuth("login")}>Masuk</button>
             <button className="btn btn-primary" onClick={() => openAuth("register")}>Daftar</button>
           </>
         ) : (
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:32,height:32,borderRadius:"50%",background:`linear-gradient(135deg,${C.primary},${C.primaryDeep})`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color:"#fff"}}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `linear-gradient(135deg,${C.primary},${C.primaryDeep})`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: "#fff" }}>
               {user.charAt(0).toUpperCase()}
             </div>
-            <span style={{fontSize:13,fontWeight:600,color:C.ink}}>{user}</span>
-            <button onClick={openAdmin} style={{background:C.primaryLight,color:C.primaryDeep,border:`1.5px solid ${C.parchment}`,borderRadius:99,padding:"6px 14px",fontSize:12,cursor:"pointer",fontWeight:700,fontFamily:"'Plus Jakarta Sans',sans-serif",transition:".15s"}}>
-              Admin
-            </button>
-            <button onClick={onLogout} style={{background:"none",border:"none",color:C.fog,fontSize:13,cursor:"pointer",padding:"6px 8px",fontFamily:"'Plus Jakarta Sans',sans-serif",display:"flex",alignItems:"center",gap:4}}>
-              <Ic.Logout/>Keluar
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{user}</span>
+
+            {userRole === 'admin' && (
+              <button onClick={openAdmin}
+                style={{ background: C.primaryLight, color: C.primaryDeep, border: `1.5px solid ${C.parchment}`, borderRadius: 99, padding: "6px 14px", fontSize: 12, cursor: "pointer", fontWeight: 700, fontFamily: "'Plus Jakarta Sans',sans-serif", transition: ".15s" }}>
+                Admin
+              </button>
+            )}
+
+            <button onClick={onLogout} style={{ background: "none", border: "none", color: C.fog, fontSize: 13, cursor: "pointer", padding: "6px 8px", fontFamily: "'Plus Jakarta Sans',sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+              <Ic.Logout /> Keluar
             </button>
           </div>
         )}
@@ -1311,7 +1477,7 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
   );
 }
 
-function CartPopup({ cart, close, remove, user, openAuth, clearCart }) {
+function CartPopup({ cart, close, remove, user, userRole, openAuth, clearCart }) {
   const [showCheckout, setShowCheckout] = useState(false);
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
@@ -1319,6 +1485,10 @@ function CartPopup({ cart, close, remove, user, openAuth, clearCart }) {
     if (!user) {
       close();
       openAuth("login");
+      return;
+    }
+    if (userRole === 'admin') {
+      alert("Admin tidak dapat melakukan checkout.");
       return;
     }
     setShowCheckout(true);
@@ -1498,10 +1668,13 @@ export default function App() {
   const [showCart, setShowCart]       = useState(false);
   const [showAuth, setShowAuth]       = useState(null);
   const [showLogout, setShowLogout]   = useState(false);
+  const [showMyOrders, setShowMyOrders] = useState(false);
   const [products, setProducts]       = useState([]);
   const [categories, setCategories]   = useState([]);
   const [orders, setOrders]           = useState([]);
   const [loading, setLoading]         = useState(true);
+  const [userRole, setUserRole]       = useState(() => localStorage.getItem('meihua_role') || 'customer');
+
   const clearCart = () => setCart([]);
 
   useEffect(() => { saveLocal('meihua_cart', cart); }, [cart]);
@@ -1509,22 +1682,31 @@ export default function App() {
   useEffect(() => { saveLocal('meihua_active_cat', activeCategory); }, [activeCategory]);
   useEffect(() => { saveLocal('meihua_search', searchQuery); }, [searchQuery]);
 
+  // Fetch public data (products & categories) — tidak butuh login
   useEffect(() => {
     const token = localStorage.getItem('meihua_token');
     const savedName = localStorage.getItem('meihua_name');
-    if (token && savedName) setUser(savedName);
+    const savedRole = localStorage.getItem('meihua_role');
+    if (token && savedName) {
+      setUser(savedName);
+      setUserRole(savedRole || 'customer');
+    }
     async function fetchPublicData() {
       setLoading(true);
       try {
         const [prods, cats] = await Promise.all([apiGetProducts(), apiGetCategories()]);
         setProducts(Array.isArray(prods) ? prods : []);
         setCategories(Array.isArray(cats) ? cats : []);
-      } catch (err) { console.error('[App] fetchPublicData error:', err); }
-      finally { setLoading(false); }
+      } catch (err) {
+        console.error('[App] fetchPublicData error:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchPublicData();
   }, []);
 
+  // Fetch orders — hanya untuk admin
   useEffect(() => {
     const token = localStorage.getItem('meihua_token');
     const role = localStorage.getItem('meihua_role');
@@ -1535,11 +1717,14 @@ export default function App() {
   }, [user]);
 
   const addToCart = (product) => setCart(prev => {
-    const exist = prev.find(i => i.id===product.id);
-    if (exist) return prev.map(i => i.id===product.id ? {...i,qty:i.qty+1} : i);
-    return [...prev, {...product,qty:1}];
+    const exist = prev.find(i => i.id === product.id);
+    if (exist) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
+    return [...prev, { ...product, qty: 1 }];
   });
-  const removeFromCart = (id) => setCart(prev => prev.map(i => i.id===id ? {...i,qty:i.qty-1} : i).filter(i => i.qty>0));
+
+  const removeFromCart = (id) => setCart(prev =>
+    prev.map(i => i.id === id ? { ...i, qty: i.qty - 1 } : i).filter(i => i.qty > 0)
+  );
 
   const filteredProducts = products.filter(p => {
     if (activeCategory && p.cat !== activeCategory.id) return false;
@@ -1549,35 +1734,38 @@ export default function App() {
         p.name.toLowerCase().includes(q) ||
         (p.seller && p.seller.toLowerCase().includes(q)) ||
         (p.cat && p.cat.toLowerCase().includes(q)) ||
-        (categories.find(c => c.id===p.cat)?.label||"").toLowerCase().includes(q)
+        (categories.find(c => c.id === p.cat)?.label || "").toLowerCase().includes(q)
       );
     }
     return true;
   });
 
   if (loading) return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",background:C.silk}}>
-      <div style={{textAlign:"center"}}>
-        <MHLogo size={52}/>
-        <p style={{marginTop:16,color:C.fog,fontSize:13,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Memuat data MeiHua…</p>
-        <div className="uploading-bar" style={{width:120,margin:"12px auto 0"}}/>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: C.silk }}>
+      <div style={{ textAlign: "center" }}>
+        <MHLogo size={52} />
+        <p style={{ marginTop: 16, color: C.fog, fontSize: 13, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>Memuat data MeiHua…</p>
+        <div className="uploading-bar" style={{ width: 120, margin: "12px auto 0" }} />
       </div>
     </div>
   );
 
   return (
     <>
-      <GlobalStyles/>
+      <GlobalStyles />
+
       {!adminMode && (
         <TopNavbar
           user={user}
-          cartCount={cart.reduce((a,b) => a+b.qty, 0)}
+          userRole={userRole}
+          cartCount={cart.reduce((a, b) => a + b.qty, 0)}
           openCart={() => setShowCart(true)}
           openAuth={m => setShowAuth(m)}
           openAdmin={() => setAdminMode(true)}
           onLogout={() => setShowLogout(true)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          openMyOrders={() => setShowMyOrders(true)}
         />
       )}
 
@@ -1589,20 +1777,20 @@ export default function App() {
           user={user} onClose={() => setAdminMode(false)}
         />
       ) : (
-        <div style={{display:"flex",height:"calc(100vh - 60px)",overflow:"hidden"}}>
+        <div style={{ display: "flex", height: "calc(100vh - 60px)", overflow: "hidden" }}>
           {/* Sidebar Kategori */}
-          <div style={{width:130,background:C.snow,flexShrink:0,borderRight:`1px solid ${C.parchment}`,padding:"10px 0",overflowY:"auto"}}>
-            <div style={{padding:"7px 16px 9px",borderBottom:`1px solid ${C.parchment}`,marginBottom:4}}>
-              <p style={{fontSize:9.5,fontWeight:700,color:C.fog,textTransform:"uppercase",letterSpacing:".8px",margin:0}}>Kategori</p>
+          <div style={{ width: 130, background: C.snow, flexShrink: 0, borderRight: `1px solid ${C.parchment}`, padding: "10px 0", overflowY: "auto" }}>
+            <div style={{ padding: "7px 16px 9px", borderBottom: `1px solid ${C.parchment}`, marginBottom: 4 }}>
+              <p style={{ fontSize: 9.5, fontWeight: 700, color: C.fog, textTransform: "uppercase", letterSpacing: ".8px", margin: 0 }}>Kategori</p>
             </div>
-            <div className={`cat-item ${!activeCategory?"active":""}`}
+            <div className={`cat-item ${!activeCategory ? "active" : ""}`}
               onClick={() => { setActiveCategory(null); setSearchQuery(""); }}>
               Semua
             </div>
             {categories.map(cat => (
-              <div key={cat.id} className={`cat-item ${activeCategory?.id===cat.id?"active":""}`}
+              <div key={cat.id} className={`cat-item ${activeCategory?.id === cat.id ? "active" : ""}`}
                 onClick={() => {
-                  setActiveCategory(activeCategory?.id===cat.id ? null : cat);
+                  setActiveCategory(activeCategory?.id === cat.id ? null : cat);
                   setSearchQuery("");
                 }}>
                 {cat.label}
@@ -1611,37 +1799,33 @@ export default function App() {
           </div>
 
           {/* Area Produk */}
-          <div style={{flex:1,overflowY:"auto",padding:18}}>
-            {/* Breadcrumb */}
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,fontSize:13}}>
-              <span style={{cursor:"pointer",color:!activeCategory?C.primary:C.fog,fontWeight:600}}
+          <div style={{ flex: 1, overflowY: "auto", padding: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, fontSize: 13 }}>
+              <span style={{ cursor: "pointer", color: !activeCategory ? C.primary : C.fog, fontWeight: 600 }}
                 onClick={() => { setActiveCategory(null); setSearchQuery(""); }}>
                 Semua Produk
               </span>
               {activeCategory && (
                 <>
-                  <span style={{color:C.parchment}}><Ic.Chevron/></span>
-                  <span style={{color:C.primary,fontWeight:600}}>{activeCategory.label}</span>
+                  <span style={{ color: C.parchment }}><Ic.Chevron /></span>
+                  <span style={{ color: C.primary, fontWeight: 600 }}>{activeCategory.label}</span>
                 </>
               )}
               {searchQuery && (
                 <>
-                  <span style={{color:C.parchment}}><Ic.Chevron/></span>
-                  <span style={{color:C.primary,fontWeight:600}}>Hasil: "{searchQuery}"</span>
+                  <span style={{ color: C.parchment }}><Ic.Chevron /></span>
+                  <span style={{ color: C.primary, fontWeight: 600 }}>Hasil: "{searchQuery}"</span>
                 </>
               )}
             </div>
-
-            {/* Header */}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <h2 style={{margin:0,fontSize:18,fontWeight:700,color:C.ink,fontFamily:"'Playfair Display',serif"}}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.ink, fontFamily: "'Playfair Display',serif" }}>
                 {searchQuery ? "Hasil pencarian" : activeCategory ? activeCategory.label : "Semua Produk"}
               </h2>
-              <span style={{fontSize:12,color:C.fog,background:C.rose,padding:"4px 12px",borderRadius:99,fontWeight:600}}>
+              <span style={{ fontSize: 12, color: C.fog, background: C.rose, padding: "4px 12px", borderRadius: 99, fontWeight: 600 }}>
                 {filteredProducts.length} produk
               </span>
             </div>
-
             <ProductGrid
               products={filteredProducts}
               cart={cart}
@@ -1653,25 +1837,36 @@ export default function App() {
         </div>
       )}
 
+      {/* Modal riwayat pesanan customer */}
+      {showMyOrders && (
+        <MyOrdersPanel onClose={() => setShowMyOrders(false)} />
+      )}
+
+      {/* Keranjang */}
       {showCart && (
         <CartPopup
           cart={cart}
           close={() => setShowCart(false)}
           remove={removeFromCart}
           user={user}
+          userRole={userRole}
           openAuth={m => setShowAuth(m)}
           clearCart={clearCart}
         />
       )}
 
+      {/* Auth modal */}
       {showAuth && (
         <AuthModal
           mode={showAuth}
           close={() => setShowAuth(null)}
           setUser={setUser}
+          setUserRole={setUserRole}
           onLoginAdmin={() => setAdminMode(true)}
         />
       )}
+
+      {/* Konfirmasi logout */}
       {showLogout && (
         <ConfirmModal
           title="Yakin ingin keluar?"
@@ -1681,7 +1876,11 @@ export default function App() {
             localStorage.removeItem('meihua_role');
             localStorage.removeItem('meihua_name');
             localStorage.removeItem('meihua_admin_mode');
-            setUser(null); setAdminMode(false); setShowLogout(false); setCart([]);
+            setUser(null);
+            setUserRole('customer');
+            setAdminMode(false);
+            setShowLogout(false);
+            setCart([]);
           }}
           onCancel={() => setShowLogout(false)}
         />

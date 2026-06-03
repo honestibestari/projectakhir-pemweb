@@ -272,6 +272,21 @@ export async function apiCreateOrder(orderData) {
   });
 }
 
+export async function apiGetMyOrders() {
+  try {
+    const token = getToken();
+    if (!token) return [];
+    const data = await apiFetch('/orders', {
+      headers: authHeaders(),
+    });
+    const list = Array.isArray(data) ? data : (data?.data ?? data?.orders ?? []);
+    return list;
+  } catch (err) {
+    console.error('[MeiHua API] getMyOrders error:', err);
+    return [];
+  }
+}
+
 export async function apiUpdateOrderStatus(id, status) {
   return apiFetch(`/orders/${id}/status`, {
     method: 'PATCH',
