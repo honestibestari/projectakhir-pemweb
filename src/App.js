@@ -1319,9 +1319,9 @@ function ProductGrid({ products, cart, addToCart, removeFromCart, searchQuery })
 }
 
 const PAYMENT_METHODS = [
-  { id: "transfer", label: "Transfer Bank", icon: "🏦", detail: "BCA · Mandiri · BNI" },
-  { id: "qris",     label: "QRIS",          icon: "📱", detail: "Semua e-wallet & m-banking" },
-  { id: "cod",      label: "COD",           icon: "🚚", detail: "Bayar saat barang tiba" },
+  { id: "transfer", label: "Transfer Bank", detail: "BCA · Mandiri · BNI" },
+  { id: "qris", label: "QRIS", detail: "Semua e-wallet & m-banking" },
+  { id: "cod", label: "COD", detail: "Bayar saat barang tiba" },
 ];
 
 function CheckoutModal({ cart, user, onClose, onSuccess }) {
@@ -1435,9 +1435,9 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
             <span style={{ fontWeight: 700, fontSize: 20, color: C.primary }}>{fmt(total)}</span>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => { setErr(""); setStep(1); }} className="btn btn-ghost" style={{ flex: 1, padding: 12 }}>← Ubah Data</button>
+            <button onClick={() => { setErr(""); setStep(1); }} className="btn btn-ghost" style={{ flex: 1, padding: 12 }}>Kembali</button>
             <button onClick={handleConfirm} disabled={loading} className="btn btn-primary" style={{ flex: 2, padding: 12, opacity: loading ? 0.7 : 1 }}>
-              {loading ? "Memproses..." : "✓ Konfirmasi & Pesan"}
+              {loading ? "Memproses..." : "Konfirmasi & Pesan"}
             </button>
           </div>
         </div>
@@ -1467,12 +1467,12 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
           </div>
           <div className="inp-group">
             <label className="inp-label">Nomor HP *</label>
-            <input className="inp" placeholder="08xxxxxxxxxx" type="tel" value={form.phone}
+            <input className="inp" placeholder="08 xxxxxxxxxx" type="tel" value={form.phone}
               onChange={e => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div className="inp-group">
             <label className="inp-label">Alamat Pengiriman *</label>
-            <textarea className="inp" placeholder="Jalan, nomor rumah, kelurahan, kota, kode pos..." value={form.address}
+            <textarea className="inp" placeholder="Jalan, nomor rumah, kelurahan, kota, kode pos" value={form.address}
               onChange={e => setForm({ ...form, address: e.target.value })} style={{ minHeight: 80 }} />
           </div>
           <div className="inp-group">
@@ -1495,11 +1495,11 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
           </div>
           <div className="inp-group">
             <label className="inp-label">Catatan (opsional)</label>
-            <input className="inp" placeholder="Instruksi khusus untuk penjual..." value={form.notes}
+            <input className="inp" placeholder="Pesan untuk penjual" value={form.notes}
               onChange={e => setForm({ ...form, notes: e.target.value })} />
           </div>
           <button onClick={handleNext} className="btn btn-primary" style={{ width: "100%", padding: 13, marginTop: 4 }}>
-            Lanjut ke Konfirmasi →
+            Lanjut ke Konfirmasi
           </button>
         </div>
       </div>
@@ -1575,7 +1575,7 @@ function CartPopup({ cart, close, remove, user, userRole, openAuth, clearCart })
                 </p>
               )}
               <button onClick={handleCheckout} className="btn btn-primary" style={{ width: "100%", padding: 13, fontSize: 13, borderRadius: 10 }}>
-                {user ? "Checkout Sekarang →" : "Login untuk Checkout"}
+                {user ? "Checkout Sekarang" : "Login untuk Checkout"}
               </button>
             </div>
           </>
