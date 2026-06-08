@@ -57,7 +57,7 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 router.post('/', verifyToken, async (req, res) => {
-  const { customer, phone, address, payment_method, notes, items, total } = req.body;
+  const { customer, phone, address, notes, items, total } = req.body;
 
   if (!customer || !items || items.length === 0 || !total) {
     return res.status(400).json({ message: 'Data pesanan tidak lengkap.' });
@@ -68,20 +68,9 @@ router.post('/', verifyToken, async (req, res) => {
 
   try {
     await db.query(
-      `INSERT INTO orders 
-        (id, customer, phone, address, payment_method, notes, total, status, date, user_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-      [
-        orderId,
-        customer,
-        phone || '',
-        address || '',
-        payment_method || 'transfer',
-        notes || '',
-        total,
-        today,
-        req.user.id,
-      ]
+      `INSERT INTO orders (id, customer, phone, address, notes, total, status, payment_status, date, user_id)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?)`,
+      [orderId, customer, phone || '', address || '', notes || '', total, today, req.user.id]
     );
 
     for (const item of items) {

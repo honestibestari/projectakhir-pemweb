@@ -3,7 +3,8 @@ import {
   apiLogin, apiRegister, apiGetProducts, apiGetCategories,
   apiGetOrders, apiAddProduct, apiUpdateProduct, apiDeleteProduct,
   apiAddCategory, apiUpdateCategory, apiDeleteCategory,
-  apiUpdateOrderStatus, apiCreateOrder, apiGetMyOrders
+  apiUpdateOrderStatus, apiCreateOrder, apiGetMyOrders,
+  apiCreatePaymentToken
 } from './api';
 
 const C = {
@@ -1319,67 +1320,217 @@ function ProductGrid({ products, cart, addToCart, removeFromCart, searchQuery })
 }
 
 const PAYMENT_METHODS = [
-  { id: "transfer", label: "Transfer Bank", detail: "BCA · Mandiri · BNI" },
-  { id: "qris", label: "QRIS", detail: "Semua e-wallet & m-banking" },
-  { id: "cod", label: "COD", detail: "Bayar saat barang tiba" },
+  {
+    id: "bank_transfer",
+    label: "Transfer Bank",
+    detail: "BCA, Mandiri, BNI, BRI",
+  },
+  {
+    id: "gopay",
+    label: "GoPay",
+    detail: "Bayar via aplikasi Gojek",
+  },
+  {
+    id: "ovo",
+    label: "OVO",
+    detail: "Bayar via aplikasi OVO",
+  },
+  {
+    id: "dana",
+    label: "DANA",
+    detail: "Bayar via aplikasi DANA",
+  },
+  {
+    id: "shopeepay",
+    label: "ShopeePay",
+    detail: "Bayar via aplikasi Shopee",
+  },
+  {
+    id: "qris",
+    label: "QRIS",
+    detail: "Scan QR dari semua e-wallet",
+  },
+  {
+    id: "credit_card",
+    label: "Kartu Kredit / Debit",
+    detail: "Visa, Mastercard, JCB",
+  },
+  {
+    id: "alfamart",
+    label: "Alfamart",
+    detail: "Bayar di minimarket Alfamart",
+  },
+  {
+    id: "indomaret",
+    label: "Indomaret",
+    detail: "Bayar di minimarket Indomaret",
+  },
 ];
 
+const PaymentIcon = ({ id }) => {
+  const icons = {
+    bank_transfer: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2"/>
+        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+      </svg>
+    ),
+    gopay: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4l3 3"/>
+      </svg>
+    ),
+    ovo: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 12h8M12 8v8"/>
+      </svg>
+    ),
+    dana: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/>
+        <path d="M2 10h20"/>
+      </svg>
+    ),
+    shopeepay: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+        <path d="M3 6h18"/>
+        <path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+    ),
+    qris: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <path d="M14 14h3v3M17 20v1M20 14v3M20 20h1"/>
+      </svg>
+    ),
+    credit_card: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="4" width="22" height="16" rx="2"/>
+        <path d="M1 10h22"/>
+      </svg>
+    ),
+    alfamart: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    ),
+    indomaret: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <path d="M9 22V12h6v10"/>
+      </svg>
+    ),
+  };
+  return icons[id] || null;
+};
+
 function CheckoutModal({ cart, user, onClose, onSuccess }) {
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: user || "", phone: "", address: "", payment: "transfer", notes: "" });
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [step, setStep]                       = useState(1);
+  const [form, setForm]                       = useState({ name: user || "", phone: "", address: "", notes: "" });
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [err, setErr]                         = useState("");
+  const [loading, setLoading]                 = useState(false);
+  const [orderId, setOrderId]                 = useState(null);
+  const [paidWith, setPaidWith]               = useState(null);
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
-  const validate = () => {
+  const validateForm = () => {
     if (!form.name.trim()) return "Nama penerima wajib diisi.";
-    if (!form.phone.trim() || form.phone.replace(/\D/g,'').length < 9) return "Nomor HP tidak valid.";
+    if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 9) return "Nomor HP tidak valid.";
     if (!form.address.trim()) return "Alamat pengiriman wajib diisi.";
     return null;
   };
 
-  const handleNext = () => {
-    const e = validate();
+  const handleNextToPayment = () => {
+    const e = validateForm();
     if (e) { setErr(e); return; }
     setErr(""); setStep(2);
   };
 
+  const handleNextToConfirm = () => {
+    if (!selectedPayment) { setErr("Pilih metode pembayaran terlebih dahulu."); return; }
+    setErr(""); setStep(3);
+  };
+
   const handleConfirm = async () => {
     setLoading(true);
+    setErr("");
     try {
-      await apiCreateOrder({
+      const orderRes = await apiCreateOrder({
         customer: form.name,
         phone: form.phone,
         address: form.address,
-        payment_method: form.payment,
+        payment_method: selectedPayment.id,
         notes: form.notes,
         items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
         total,
       });
-      setStep(3);
+
+      const newOrderId = orderRes.id;
+      setOrderId(newOrderId);
+
+      const paymentRes = await apiCreatePaymentToken(newOrderId, selectedPayment.id);
+
+      window.snap.pay(paymentRes.token, {
+        onSuccess: (result) => {
+          console.log('[Midtrans] Sukses:', result);
+          setPaidWith(selectedPayment);
+          setStep(4);
+        },
+        onPending: (result) => {
+          console.log('[Midtrans] Pending:', result);
+          setPaidWith(selectedPayment);
+          setStep(5);
+        },
+        onError: (result) => {
+          console.error('[Midtrans] Error:', result);
+          setErr("Pembayaran gagal. Silakan coba lagi atau pilih metode lain.");
+          setLoading(false);
+        },
+        onClose: () => {
+          setLoading(false);
+          setErr("Popup ditutup. Pesanan tersimpan, selesaikan pembayaran nanti dari riwayat pesanan.");
+        },
+      });
     } catch (e) {
-      setErr("Gagal membuat pesanan: " + e.message);
-      setStep(1);
-    } finally {
+      setErr("Gagal memproses: " + e.message);
       setLoading(false);
     }
   };
 
-  if (step === 3) return (
+  if (step === 4) return (
     <Overlay onClose={() => {}}>
       <div style={{ background: C.snow, borderRadius: 20, width: 400, padding: "40px 32px", textAlign: "center", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
-        <div style={{ width: 68, height: 68, borderRadius: "50%", background: C.jadeLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 32 }}>✓</div>
-        <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: C.ink }}>Pesanan Berhasil!</h3>
-        <p style={{ fontSize: 13, color: C.stone, margin: "0 0 6px", lineHeight: 1.7 }}>
-          Terima kasih, <strong>{form.name}</strong>!
+        <div style={{ width: 72, height: 72, borderRadius: "50%", background: C.jadeLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: C.jade }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: C.ink }}>
+          Pembayaran Berhasil
+        </h3>
+        <p style={{ fontSize: 13, color: C.stone, margin: "0 0 4px", lineHeight: 1.7 }}>
+          Terima kasih, <strong>{form.name}</strong>.
+        </p>
+        <p style={{ fontSize: 12, color: C.fog, margin: "0 0 4px" }}>
+          Order ID: <strong style={{ color: C.primary }}>#{orderId}</strong>
         </p>
         <p style={{ fontSize: 12, color: C.fog, margin: "0 0 24px" }}>
-          Kami akan menghubungi {form.phone} untuk konfirmasi.
+          via <strong>{paidWith?.label}</strong>
         </p>
-        <div style={{ background: C.rose, borderRadius: 12, padding: "14px 18px", marginBottom: 24, textAlign: "left" }}>
-          <p style={{ fontSize: 11, color: C.stone, margin: "0 0 4px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".7px" }}>Total Pembayaran</p>
-          <p style={{ fontSize: 24, fontWeight: 700, color: C.primary, margin: "0 0 4px" }}>{fmt(total)}</p>
-          <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>via {PAYMENT_METHODS.find(m => m.id === form.payment)?.label}</p>
+        <div style={{ background: C.rose, borderRadius: 12, padding: "16px 18px", marginBottom: 24, textAlign: "left" }}>
+          <p style={{ fontSize: 11, color: C.stone, margin: "0 0 4px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".7px" }}>
+            Total Dibayar
+          </p>
+          <p style={{ fontSize: 26, fontWeight: 700, color: C.primary, margin: "0 0 4px" }}>{fmt(total)}</p>
+          <p style={{ fontSize: 11, color: C.jade, fontWeight: 600, margin: 0 }}>Pembayaran dikonfirmasi</p>
         </div>
         <button onClick={onSuccess} className="btn btn-primary" style={{ width: "100%", padding: 13 }}>
           Kembali Belanja
@@ -1388,56 +1539,171 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
     </Overlay>
   );
 
-  if (step === 2) return (
-    <Overlay onClose={() => setStep(1)}>
-      <div style={{ background: C.snow, borderRadius: 20, width: 460, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+  if (step === 5) return (
+    <Overlay onClose={() => {}}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 400, padding: "40px 32px", textAlign: "center", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+        <div style={{ width: 72, height: 72, borderRadius: "50%", background: C.amberL, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", color: C.amber }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: C.ink }}>
+          Menunggu Pembayaran
+        </h3>
+        <p style={{ fontSize: 12, color: C.fog, margin: "0 0 4px" }}>
+          Order ID: <strong style={{ color: C.primary }}>#{orderId}</strong>
+        </p>
+        <p style={{ fontSize: 12, color: C.fog, margin: "0 0 4px" }}>
+          Metode: <strong>{paidWith?.label}</strong>
+        </p>
+        <p style={{ fontSize: 13, color: C.stone, margin: "0 0 24px", lineHeight: 1.7 }}>
+          Selesaikan pembayaran sesuai instruksi. Pesanan diproses setelah pembayaran dikonfirmasi.
+        </p>
+        <div style={{ background: C.amberL, borderRadius: 12, padding: "14px 16px", marginBottom: 24, textAlign: "left" }}>
+          <p style={{ fontSize: 12, color: C.amber, fontWeight: 700, margin: "0 0 4px" }}>Penting</p>
+          <p style={{ fontSize: 12, color: C.stone, margin: 0, lineHeight: 1.6 }}>
+            Cek riwayat pesanan untuk melihat instruksi pembayaran lengkap.
+          </p>
+        </div>
+        <button onClick={onSuccess} className="btn btn-primary" style={{ width: "100%", padding: 13 }}>
+          Oke, Mengerti
+        </button>
+      </div>
+    </Overlay>
+  );
+
+  if (step === 3) return (
+    <Overlay onClose={() => setStep(2)}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 480, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
         <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.parchment}`, background: C.silk, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".8px", margin: "0 0 3px" }}>Langkah 2 dari 2</p>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display',serif" }}>Konfirmasi Pesanan</h3>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".8px", margin: "0 0 3px" }}>
+              Langkah 3 dari 3
+            </p>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display',serif" }}>
+              Konfirmasi Pesanan
+            </h3>
           </div>
           <button onClick={onClose} className="btn btn-icon"><Ic.X /></button>
         </div>
-        <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-          {err && <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>}
+        <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
+          {err && (
+            <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>
+          )}
+
+          {/* Pengiriman */}
           <div style={{ background: C.rose, borderRadius: 12, padding: 16 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 10px" }}>Dikirim ke</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 8px" }}>Dikirim ke</p>
             <p style={{ fontWeight: 700, color: C.ink, margin: "0 0 3px", fontSize: 14 }}>{form.name}</p>
             <p style={{ fontSize: 12, color: C.fog, margin: "0 0 3px" }}>{form.phone}</p>
             <p style={{ fontSize: 12, color: C.fog, margin: 0 }}>{form.address}</p>
           </div>
+
+          {/* Metode terpilih */}
+          <div style={{ background: C.primaryLight, borderRadius: 12, padding: "12px 16px", border: `1.5px solid ${C.blush}`, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ color: C.primary }}>
+              <PaymentIcon id={selectedPayment?.id} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.primaryDeep }}>{selectedPayment?.label}</p>
+              <p style={{ margin: 0, fontSize: 11, color: C.fog }}>{selectedPayment?.detail}</p>
+            </div>
+          </div>
+
+          {/* Items */}
           <div>
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 10px" }}>Item Pesanan ({cart.length})</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".7px", margin: "0 0 10px" }}>
+              Item ({cart.length})
+            </p>
             {cart.map((item, i) => (
               <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: i < cart.length - 1 ? `1px solid ${C.parchment}` : "none", gap: 10 }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   {item.img && <img src={item.img} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: "cover", border: `1px solid ${C.parchment}` }} />}
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: "0 0 2px" }}>{item.name}</p>
-                    <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>×{item.qty} · {fmt(item.price)}</p>
+                    <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>x{item.qty} · {fmt(item.price)}</p>
                   </div>
                 </div>
                 <p style={{ fontWeight: 700, color: C.ink, margin: 0, flexShrink: 0 }}>{fmt(item.qty * item.price)}</p>
               </div>
             ))}
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: C.silk, borderRadius: 10 }}>
-            <span style={{ fontSize: 13, color: C.stone }}>Metode Pembayaran</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{PAYMENT_METHODS.find(m => m.id === form.payment)?.label}</span>
-          </div>
+
           {form.notes && (
             <div style={{ padding: "10px 14px", background: C.silk, borderRadius: 10 }}>
-              <span style={{ fontSize: 12, color: C.fog }}>Catatan: {form.notes}</span>
+              <p style={{ fontSize: 11, color: C.fog, margin: 0 }}>Catatan: {form.notes}</p>
             </div>
           )}
+
+          {/* Total */}
           <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 16px", background: C.primaryLight, borderRadius: 10, border: `1px solid ${C.blush}` }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>Total Bayar</span>
-            <span style={{ fontWeight: 700, fontSize: 20, color: C.primary }}>{fmt(total)}</span>
+            <span style={{ fontWeight: 700, fontSize: 22, color: C.primary }}>{fmt(total)}</span>
           </div>
+
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => { setErr(""); setStep(1); }} className="btn btn-ghost" style={{ flex: 1, padding: 12 }}>Kembali</button>
-            <button onClick={handleConfirm} disabled={loading} className="btn btn-primary" style={{ flex: 2, padding: 12, opacity: loading ? 0.7 : 1 }}>
-              {loading ? "Memproses..." : "Konfirmasi & Pesan"}
+            <button onClick={() => { setErr(""); setStep(2); }} className="btn btn-ghost" style={{ flex: 1, padding: 12 }}>
+              Kembali
+            </button>
+            <button onClick={handleConfirm} disabled={loading} className="btn btn-primary"
+              style={{ flex: 2, padding: 12, opacity: loading ? 0.7 : 1 }}>
+              {loading ? "Memproses..." : `Bayar ${fmt(total)}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Overlay>
+  );
+
+  if (step === 2) return (
+    <Overlay onClose={() => setStep(1)}>
+      <div style={{ background: C.snow, borderRadius: 20, width: 480, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.parchment}`, background: C.silk, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 700, color: C.stone, textTransform: "uppercase", letterSpacing: ".8px", margin: "0 0 3px" }}>
+              Langkah 2 dari 3
+            </p>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, fontFamily: "'Playfair Display',serif" }}>
+              Metode Pembayaran
+            </h3>
+          </div>
+          <button onClick={onClose} className="btn btn-icon"><Ic.X /></button>
+        </div>
+        <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+          {err && (
+            <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>
+          )}
+          <p style={{ fontSize: 12, color: C.fog, margin: "0 0 6px" }}>
+            Total: <strong style={{ color: C.primary, fontSize: 15 }}>{fmt(total)}</strong>
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {PAYMENT_METHODS.map(method => (
+              <div key={method.id} onClick={() => setSelectedPayment(method)}
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 12, cursor: "pointer", border: `1.5px solid ${selectedPayment?.id === method.id ? C.primary : C.parchment}`, background: selectedPayment?.id === method.id ? C.primaryLight : C.snow, transition: ".15s" }}>
+                <div style={{ color: selectedPayment?.id === method.id ? C.primary : C.fog, flexShrink: 0 }}>
+                  <PaymentIcon id={method.id} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: selectedPayment?.id === method.id ? C.primaryDeep : C.ink }}>
+                    {method.label}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 11, color: C.fog }}>{method.detail}</p>
+                </div>
+                <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${selectedPayment?.id === method.id ? C.primary : C.parchment}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: ".15s" }}>
+                  {selectedPayment?.id === method.id && (
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: C.primary }} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+            <button onClick={() => { setErr(""); setStep(1); }} className="btn btn-ghost" style={{ flex: 1, padding: 12 }}>
+              Kembali
+            </button>
+            <button onClick={handleNextToConfirm} className="btn btn-primary" style={{ flex: 2, padding: 12 }}>
+              Lanjut ke Konfirmasi
             </button>
           </div>
         </div>
@@ -1450,56 +1716,49 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
       <div style={{ background: C.snow, borderRadius: 20, width: 460, maxHeight: "92vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(28,17,23,.22)" }}>
         <div style={{ background: `linear-gradient(135deg,${C.primary},${C.primaryDeep})`, padding: "22px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <p style={{ margin: "0 0 3px", fontSize: 10, color: "rgba(255,255,255,.7)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px" }}>Langkah 1 dari 2</p>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',serif" }}>Data Pengiriman</h3>
-            <p style={{ margin: "3px 0 0", fontSize: 12, color: "rgba(255,255,255,.7)" }}>{cart.length} produk · {fmt(total)}</p>
+            <p style={{ margin: "0 0 3px", fontSize: 10, color: "rgba(255,255,255,.7)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".8px" }}>
+              Langkah 1 dari 3
+            </p>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',serif" }}>
+              Data Pengiriman
+            </h3>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: "rgba(255,255,255,.7)" }}>
+              {cart.length} produk · {fmt(total)}
+            </p>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,.2)", border: "none", borderRadius: 9, width: 34, height: 34, cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Ic.X />
           </button>
         </div>
         <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 14 }}>
-          {err && <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>}
+          {err && (
+            <div style={{ background: C.dangerL, border: `1px solid #FECACA`, borderRadius: 9, padding: "10px 14px", fontSize: 13, color: C.danger }}>{err}</div>
+          )}
           <div className="inp-group">
             <label className="inp-label">Nama Penerima *</label>
-            <input className="inp" placeholder="Nama lengkap penerima" value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })} />
+            <input className="inp" placeholder="Nama lengkap penerima"
+              value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="inp-group">
             <label className="inp-label">Nomor HP *</label>
-            <input className="inp" placeholder="08 xxxxxxxxxx" type="tel" value={form.phone}
-              onChange={e => setForm({ ...form, phone: e.target.value })} />
+            <input className="inp" placeholder="08xxxxxxxxxx" type="tel"
+              value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div className="inp-group">
             <label className="inp-label">Alamat Pengiriman *</label>
-            <textarea className="inp" placeholder="Jalan, nomor rumah, kelurahan, kota, kode pos" value={form.address}
-              onChange={e => setForm({ ...form, address: e.target.value })} style={{ minHeight: 80 }} />
-          </div>
-          <div className="inp-group">
-            <label className="inp-label">Metode Pembayaran *</label>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
-              {PAYMENT_METHODS.map(m => (
-                <div key={m.id} onClick={() => setForm({ ...form, payment: m.id })}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", border: `1.5px solid ${form.payment === m.id ? C.primary : C.parchment}`, borderRadius: 10, cursor: "pointer", background: form.payment === m.id ? C.primaryLight : C.snow, transition: ".15s" }}>
-                  <span style={{ fontSize: 22 }}>{m.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: form.payment === m.id ? C.primaryDeep : C.ink }}>{m.label}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: C.fog }}>{m.detail}</p>
-                  </div>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${form.payment === m.id ? C.primary : C.parchment}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {form.payment === m.id && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.primary }} />}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <textarea className="inp"
+              placeholder="Jalan, nomor rumah, kelurahan, kota, kode pos..."
+              value={form.address} onChange={e => setForm({ ...form, address: e.target.value })}
+              style={{ minHeight: 80 }} />
           </div>
           <div className="inp-group">
             <label className="inp-label">Catatan (opsional)</label>
-            <input className="inp" placeholder="Pesan untuk penjual" value={form.notes}
-              onChange={e => setForm({ ...form, notes: e.target.value })} />
+            <input className="inp" placeholder="Instruksi khusus untuk penjual..."
+              value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
           </div>
-          <button onClick={handleNext} className="btn btn-primary" style={{ width: "100%", padding: 13, marginTop: 4 }}>
-            Lanjut ke Konfirmasi
+          <button onClick={handleNextToPayment} className="btn btn-primary"
+            style={{ width: "100%", padding: 13, marginTop: 4 }}>
+            Pilih Metode Pembayaran
           </button>
         </div>
       </div>
