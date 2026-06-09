@@ -26,18 +26,9 @@
       rel="stylesheet"
     />
 
-    <!-- Midtrans Snap SDK (Sandbox) -->
-    <!-- Ganti ke https://app.midtrans.com/snap/snap.js jika sudah production -->
-    <script
-      type="text/javascript"
-      src="https://app.sandbox.midtrans.com/snap/snap.js"
-      data-client-key="Mid-client-A_AS86z7vid3nwG5"
-    ></script>
-
     <title>MeiHua Official — Fine Jewelry</title>
 
     <style>
-      /* Loading screen sebelum React mount */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -104,7 +95,6 @@
         50%       { transform: scale(1.06); opacity: 0.85; }
       }
 
-      /* Reset dasar agar tidak ada flash putih */
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; }
       body {
@@ -123,7 +113,6 @@
 
     <!-- Loading screen awal -->
     <div id="initial-loader">
-      <!-- Logo SVG inline -->
       <svg class="loader-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="mh-bg-load" x1="0" y1="0" x2="48" y2="48">
@@ -149,8 +138,14 @@
     <!-- React root -->
     <div id="root"></div>
 
+    <!-- Midtrans Snap SDK (Sandbox) -->
+    <script
+      type="text/javascript"
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="%REACT_APP_MIDTRANS_CLIENT_KEY%"
+    ></script>
+
     <script>
-      // Sembunyikan loader setelah React selesai mount
       window.addEventListener('load', function () {
         setTimeout(function () {
           var loader = document.getElementById('initial-loader');

@@ -268,17 +268,6 @@ export async function apiCreateOrder(orderData) {
   });
 }
 
-export async function apiCreatePaymentToken(orderId, paymentMethod) {
-  return apiFetch('/payment/create-token', {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify({
-      order_id: orderId,
-      payment_method: paymentMethod,
-    }),
-  });
-}
-
 export async function apiGetPaymentStatus(orderId) {
   return apiFetch(`/payment/status/${orderId}`, {
     headers: authHeaders(),
@@ -298,6 +287,22 @@ export async function apiGetMyOrders() {
     console.error('[MeiHua API] getMyOrders error:', err);
     return [];
   }
+}
+
+export async function apiCreatePaymentToken(orderId, paymentMethod) {
+  return apiFetch('/orders/create-token', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ order_id: orderId, payment_method: paymentMethod }),
+  });
+}
+
+export async function apiUpdatePaymentType(orderId, paymentType) {
+  return apiFetch(`/orders/${orderId}/payment-type`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ payment_type: paymentType }),
+  });
 }
 
 export async function apiUpdateOrderStatus(id, status) {

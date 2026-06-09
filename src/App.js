@@ -4,7 +4,7 @@ import {
   apiGetOrders, apiAddProduct, apiUpdateProduct, apiDeleteProduct,
   apiAddCategory, apiUpdateCategory, apiDeleteCategory,
   apiUpdateOrderStatus, apiCreateOrder, apiGetMyOrders,
-  apiCreatePaymentToken
+  apiCreatePaymentToken, apiUpdatePaymentType
 } from './api';
 
 const C = {
@@ -530,7 +530,7 @@ function OrdersPanel({ orders, setOrders }) {
       <div className="card">
         <table className="tbl">
           <thead>
-            <tr><th>ID Pesanan</th><th>Pelanggan</th><th>Produk</th><th>Total</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>
+            <tr><th>ID Pesanan</th><th>Pelanggan</th><th>Produk</th><th>Total</th><th>Pembayaran</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>
           </thead>
           <tbody>
             {filtered.length===0 && (
@@ -548,6 +548,7 @@ function OrdersPanel({ orders, setOrders }) {
                 </td>
                 <td style={{fontSize:12,color:C.fog,maxWidth:180}}>{o.items.map(it=>`${it.name} (×${it.qty})`).join(", ")}</td>
                 <td><span style={{fontWeight:700,color:C.ink}}>{fmt(o.total)}</span></td>
+                <td><span style={{fontSize:12,color:C.stone,fontWeight:600}}>{o.payment_type || 'Midtrans'}</span></td>
                 <td style={{fontSize:11,color:C.fog,whiteSpace:"nowrap"}}>{o.date}</td>
                 <td><StatusBadge status={o.status}/></td>
                 <td><button className="btn btn-edit-soft btn-sm" onClick={() => setSelected(o)}>Detail</button></td>
@@ -1047,6 +1048,11 @@ function MyOrdersPanel({ onClose }) {
                               {PAYMENT_METHODS?.find(m => m.id === order.payment_method)?.label || order.payment_method || 'Transfer Bank'}
                             </p>
                             <p style={{ fontSize: 12, color: C.fog, margin: 0 }}>Status: <span style={{ color: sc.color, fontWeight: 700 }}>{STATUS_LABEL[order.status]}</span></p>
+                            {order.payment_type && (
+                              <p style={{fontSize:12,color:C.fog,margin:"4px 0 0"}}>
+                                Metode: <span style={{color:C.ink,fontWeight:700}}>{order.payment_type}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
                         {order.notes && (
@@ -1477,15 +1483,59 @@ function CheckoutModal({ cart, user, onClose, onSuccess }) {
 
       const paymentRes = await apiCreatePaymentToken(newOrderId, selectedPayment.id);
 
+      if (typeof window.snap === 'undefined') {
+        window.open(`https://app.sandbox.midtrans.com/snap/v2/vtweb/${paymentRes.token}`, '_blank');
+        setPaidWith(selectedPayment);
+        setStep(4);
+        return;
+      }
+
       window.snap.pay(paymentRes.token, {
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           console.log('[Midtrans] Sukses:', result);
-          setPaidWith(selectedPayment);
+          // Mapping payment_type dari Midtrans ke label Indonesia
+          const paymentLabel = {
+            'credit_card':   'Kartu Kredit',
+            'bank_transfer': 'Transfer Bank',
+            'echannel':      'Mandiri Bill',
+            'gopay':         'GoPay',
+            'shopeepay':     'ShopeePay',
+            'qris':          'QRIS',
+            'akulaku':       'Akulaku',
+            'cstore':        result.pdf_url?.includes('alfamart') ? 'Alfamart' : 'Indomaret',
+            'ovo':           'OVO',
+            'dana':          'DANA',
+          };
+          const paymentType = paymentLabel[result.payment_type] || result.payment_type || selectedPayment.label;
+          try {
+            await apiUpdatePaymentType(newOrderId, paymentType);
+          } catch (e) {
+            console.error('Gagal update payment type:', e);
+          }
+          setPaidWith({ ...selectedPayment, label: paymentType });
           setStep(4);
         },
-        onPending: (result) => {
+        onPending: async (result) => {
           console.log('[Midtrans] Pending:', result);
-          setPaidWith(selectedPayment);
+          const paymentLabel = {
+            'credit_card':   'Kartu Kredit',
+            'bank_transfer': 'Transfer Bank',
+            'echannel':      'Mandiri Bill',
+            'gopay':         'GoPay',
+            'shopeepay':     'ShopeePay',
+            'qris':          'QRIS',
+            'akulaku':       'Akulaku',
+            'cstore':        result.pdf_url?.includes('alfamart') ? 'Alfamart' : 'Indomaret',
+            'ovo':           'OVO',
+            'dana':          'DANA',
+          };
+          const paymentType = paymentLabel[result.payment_type] || result.payment_type || selectedPayment.label;
+          try {
+            await apiUpdatePaymentType(newOrderId, paymentType);
+          } catch (e) {
+            console.error('Gagal update payment type:', e);
+          }
+          setPaidWith({ ...selectedPayment, label: paymentType });
           setStep(5);
         },
         onError: (result) => {
