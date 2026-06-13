@@ -5,7 +5,15 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+const cors = require('cors');
+
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://meihua-frontend.vercel.app'
+  ],
+  credentials: true
+}));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
