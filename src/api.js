@@ -1,4 +1,4 @@
-const BASE = '/api';
+const BASE = `${process.env.REACT_APP_API_URL}/api`;
 
 function getToken() {
   return localStorage.getItem('meihua_token');
