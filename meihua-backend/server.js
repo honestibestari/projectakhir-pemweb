@@ -8,7 +8,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://meihua-frontend.vercel.app'
+    'https://meihuaofficial.vercel.app'
   ],
   credentials: true
 }));
