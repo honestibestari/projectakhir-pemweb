@@ -56,19 +56,6 @@ function loadLocal(key, fallback) {
   } catch { return fallback; }
 }
 
-async function uploadImageToServer(file) {
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch('/api/products/upload-image', {
-    method: 'POST',
-    headers: authHeaders(),
-    body: formData,
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Upload gagal');
-  return data;
-}
-
 
 const GlobalStyles = () => (
   <style>{`
@@ -354,18 +341,41 @@ function ImageUploadWidget({ currentUrl, onChange }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef();
-  const handleFile = useCallback(async (file) => {
+
+  const handleFile = useCallback((file) => {
     if (!file) return;
-    setError(''); setUploading(true);
-    try {
-      const result = await uploadImageToServer(file);
-      onChange(result.url);
-    } catch (err) {
-      setError(err.message || 'Upload gagal. Coba lagi.');
-    } finally { setUploading(false); }
+    setError('');
+
+    // Validasi ukuran
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Ukuran file maksimal 5MB.');
+      return;
+    }
+
+    // Validasi format
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(file.type)) {
+      setError('Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau GIF.');
+      return;
+    }
+
+    setUploading(true);
+
+    // Konversi ke Base64 langsung di browser
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      onChange(e.target.result); // e.target.result = base64 string
+      setUploading(false);
+    };
+    reader.onerror = () => {
+      setError('Gagal membaca file. Coba lagi.');
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
   }, [onChange]);
+
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <span className="inp-label">Foto Produk</span>
       <div className={`upload-zone ${currentUrl ? 'has-img' : ''}`}
         onClick={() => !uploading && fileRef.current.click()}
@@ -373,32 +383,32 @@ function ImageUploadWidget({ currentUrl, onChange }) {
         onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}>
         {currentUrl ? (
           <>
-            <img src={currentUrl} alt="preview" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-            <div className="upload-overlay"><Ic.Upload/><span style={{fontSize:12,fontWeight:600}}>Ganti Foto</span></div>
+            <img src={currentUrl} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div className="upload-overlay"><Ic.Upload /><span style={{ fontSize: 12, fontWeight: 600 }}>Ganti Foto</span></div>
           </>
         ) : uploading ? (
-          <div style={{textAlign:"center",padding:20}}>
-            <p style={{fontSize:12,color:C.fog,marginBottom:10}}>Mengupload...</p>
-            <div className="uploading-bar" style={{width:80}}/>
+          <div style={{ textAlign: "center", padding: 20 }}>
+            <p style={{ fontSize: 12, color: C.fog, marginBottom: 10 }}>Memproses foto...</p>
+            <div className="uploading-bar" style={{ width: 80 }} />
           </div>
         ) : (
           <>
-            <div style={{color:C.fog,marginBottom:8}}><Ic.Image/></div>
-            <p style={{fontSize:12,color:C.fog,fontWeight:500,textAlign:"center",lineHeight:1.5,padding:"0 10px"}}>Klik atau seret foto</p>
-            <p style={{fontSize:11,color:C.blush,marginTop:4}}>JPG, PNG, WEBP · Maks 5MB</p>
+            <div style={{ color: C.fog, marginBottom: 8 }}><Ic.Image /></div>
+            <p style={{ fontSize: 12, color: C.fog, fontWeight: 500, textAlign: "center", lineHeight: 1.5, padding: "0 10px" }}>Klik atau seret foto</p>
+            <p style={{ fontSize: 11, color: C.blush, marginTop: 4 }}>JPG, PNG, WEBP · Maks 5MB</p>
           </>
         )}
         {uploading && currentUrl && (
-          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:6,background:"rgba(28,17,23,.7)"}}>
-            <div className="uploading-bar"/>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 6, background: "rgba(28,17,23,.7)" }}>
+            <div className="uploading-bar" />
           </div>
         )}
       </div>
-      {error && <p style={{fontSize:11,color:C.danger,marginTop:2}}>⚠ {error}</p>}
-      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}}
-        onChange={e => { const f = e.target.files[0]; if (f) handleFile(f); e.target.value = ''; }}/>
+      {error && <p style={{ fontSize: 11, color: C.danger, marginTop: 2 }}>⚠ {error}</p>}
+      <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }}
+        onChange={e => { const f = e.target.files[0]; if (f) handleFile(f); e.target.value = ''; }} />
       {currentUrl && (
-        <button onClick={() => onChange(null)} className="btn btn-danger-soft btn-sm" style={{width:"100%"}}>Hapus Foto</button>
+        <button onClick={() => onChange(null)} className="btn btn-danger-soft btn-sm" style={{ width: "100%" }}>Hapus Foto</button>
       )}
     </div>
   );
