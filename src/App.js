@@ -579,6 +579,7 @@ function ProductsPanel({ products, setProducts, categories }) {
   const [imgUrl, setImgUrl] = useState(null);
   const emptyForm = { name:"", cat:categories[0]?.id||"", price:"", oldPrice:"", discount:"", rating:"4.9", sold:"" };
   const [form, setForm] = useState(emptyForm);
+  const [formErrors, setFormErrors] = useState({});
 
   const resetForm = () => { setForm(emptyForm); setImgUrl(null); setEditTarget(null); };
   const openEdit = (p) => {
@@ -588,7 +589,11 @@ function ProductsPanel({ products, setProducts, categories }) {
     setView("edit");
   };
   const handleSave = async () => {
-    if (!form.name || !form.price) { alert("Nama dan harga wajib diisi!"); return; }
+    const errors = {};
+    if (!form.name.trim()) errors.name = "Nama produk wajib diisi.";
+    if (!form.price) errors.price = "Harga jual wajib diisi.";
+    if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
+    setFormErrors({});
     const data = {
       name:form.name, cat:form.cat,
       price:Number(form.price),
@@ -606,7 +611,7 @@ function ProductsPanel({ products, setProducts, categories }) {
         setProducts(prev => prev.map(p => p.id===editTarget.id ? {...p,...data,oldPrice:data.old_price,img:res?.img||imgUrl} : p));
       }
       setView("list"); resetForm();
-    } catch { alert("Gagal menyimpan produk. Coba lagi."); }
+    } catch { setFormErrors({ general: "Gagal menyimpan produk. Coba lagi." }); }
   };
 
   if (view==="add" || view==="edit") {
@@ -622,7 +627,10 @@ function ProductsPanel({ products, setProducts, categories }) {
             <div style={{display:"flex",flexDirection:"column",gap:15}}>
               <div className="inp-group">
                 <label className="inp-label">Nama Produk *</label>
-                <input className="inp" placeholder="Isi nama produk" value={form.name} onChange={e => setForm({...form,name:e.target.value})}/>
+                <input className="inp" placeholder="Isi nama produk" value={form.name}
+                  onChange={e => { setForm({...form,name:e.target.value}); setFormErrors(prev => ({...prev,name:""})); }}
+                  style={{border: formErrors.name ? `1.5px solid ${C.danger}` : ""}}/>
+                {formErrors.name && <p style={{color:C.danger,fontSize:11,margin:"4px 0 0",fontWeight:600}}>⚠ {formErrors.name}</p>}
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
                 <div className="inp-group">
@@ -637,7 +645,10 @@ function ProductsPanel({ products, setProducts, categories }) {
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Harga Jual (Rp) *</label>
-                  <input className="inp" type="number" placeholder="0" value={form.price} onChange={e => setForm({...form,price:e.target.value})}/>
+                  <input className="inp" type="number" placeholder="0" value={form.price}
+                    onChange={e => { setForm({...form,price:e.target.value}); setFormErrors(prev => ({...prev,price:""})); }}
+                    style={{border: formErrors.price ? `1.5px solid ${C.danger}` : ""}}/>
+                  {formErrors.price && <p style={{color:C.danger,fontSize:11,margin:"4px 0 0",fontWeight:600}}>⚠ {formErrors.price}</p>}
                 </div>
                 <div className="inp-group">
                   <label className="inp-label">Harga Asli (Rp)</label>
@@ -652,6 +663,7 @@ function ProductsPanel({ products, setProducts, categories }) {
                   <input className="inp" placeholder="0" value={form.sold} onChange={e => setForm({...form,sold:e.target.value})}/>
                 </div>
               </div>
+              {formErrors.general && <div style={{background:C.dangerL,border:`1px solid #FECACA`,borderRadius:10,padding:"10px 14px",fontSize:13,color:C.danger}}>⚠ {formErrors.general}</div>}
               <div style={{display:"flex",gap:10,marginTop:4}}>
                 <button onClick={() => { setView("list"); resetForm(); }} className="btn btn-ghost" style={{padding:"11px 22px"}}>Batal</button>
                 <button onClick={handleSave} className="btn btn-primary" style={{flex:1,padding:11}}>
